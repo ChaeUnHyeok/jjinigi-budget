@@ -140,10 +140,12 @@ tr:nth-child(even) td{background:#FAFBFC;}
   <button class="tab-btn" onclick="switchTab('jiyun',this)">💗 지윤소비</button>
   <button class="tab-btn" onclick="switchTab('woon',this)">💙 운혁소비</button>
   <button class="tab-btn" onclick="switchTab('parking',this)">🏦 파킹통장</button>
+  <button class="tab-btn" onclick="switchTab('settle',this)">📑 정산</button>
 </div>
 
 <div id="content">
   <div id="tab-summary" class="tab-panel active">
+    <div class="card" id="summary-goal" style="border-left:4px solid var(--yellow);margin-bottom:14px"></div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px" id="summary-cards"></div>
   </div>
 
@@ -231,12 +233,16 @@ tr:nth-child(even) td{background:#FAFBFC;}
       <div class="section-header"><span class="s-title" id="pk-count">파킹통장 내역</span><span class="s-total" style="color:var(--yellow)" id="pk-balance"></span></div>
       <div class="table-wrap"><table><thead><tr><th>날짜</th><th>사람</th><th>내용</th><th>수입</th><th>지출</th><th>잔액</th><th></th></tr></thead><tbody id="pk-body"></tbody></table></div>
     </div>
+    <div id="tab-settle" class="tab-panel">
+      <div id="settle-content"></div>
+    </div>
   </div>
-</div>
 
 <script>
 const API="https://script.google.com/macros/s/AKfycbzMRn_m206G9_Bf2SuqFJFsEXxTAuCQV7MmMK3DfoyEvKcmGTIbQnDjBgOyjrV_wY0F/exec";
 const POCKET_LIMIT=300000;
+const GOAL_AMOUNT=75731000;
+const GOAL_DATE='2026-09-30';
 
 const DEFAULT_PLAN={
   income:{woonSalary:0,woonBonus:0,jiyunSalary:0,jiyunBonus:0},
@@ -388,7 +394,7 @@ function switchTab(id,btn){
   btn.classList.add('active');
 }
 
-function renderAll(){renderSummary();renderPlan();renderLiving();renderJiyun();renderWoon();renderParking();}
+function renderAll(){renderSummary();renderPlan();renderLiving();renderJiyun();renderWoon();renderParking();renderSettle();}
 
 // ── 공통 헬퍼 ────────────────────────────────────────────
 function amountCardHTML(label,amount,color,bg,sub=''){
@@ -490,6 +496,27 @@ function renderSummary(){
   const woUsed=sum(d.woon,'금액'),woSup=d.woon.filter(r=>r['지원금여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
   const pkRows=d.parking,pkBal=pkRows.length>0?num(pkRows[pkRows.length-1]['잔액']):0;
   const pkIn=pkRows.reduce((s,r)=>s+num(r['수입']),0),pkOut=pkRows.reduce((s,r)=>s+num(r['지출']),0);
+
+  // 목표 배너
+  const goalPct=Math.min(100,Math.round(pkBal/GOAL_AMOUNT*100));
+  const goalBar=goalPct>90?'var(--green)':goalPct>50?'var(--accent)':'var(--yellow)';
+  const goalEl=document.getElementById('summary-goal');
+  if(goalEl){
+    goalEl.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+        <div>
+          <div style="font-weight:800;font-size:16px">🎯 ${GOAL_DATE.slice(0,4)}년 ${GOAL_DATE.slice(5,7)}월 ${GOAL_DATE.slice(8,10)}일까지</div>
+          <div style="font-size:13px;color:var(--sub);margin-top:2px">목표 <strong style="color:var(--text)">${fmt(GOAL_AMOUNT)}원</strong></div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:22px;font-weight:800;color:${goalBar}">${fmt(pkBal)}원</div>
+          <div style="font-size:12px;color:var(--sub)">목표의 ${goalPct}%</div>
+        </div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${goalPct}%;background:${goalBar}"></div></div>
+      <div style="font-size:11px;color:var(--sub);margin-top:4px">잔여 ${fmt(Math.max(0,GOAL_AMOUNT-pkBal))}원</div>
+    `;
+  }
 
   document.getElementById('summary-cards').innerHTML=`
     <div class="card" style="border-top:3px solid var(--accent)">
@@ -622,21 +649,24 @@ function updatePlanNote(sec,key,val){
 function renderLiving(){
   const rows=[...D().living].reverse();
   const total=sum(D().living,'금액');
-  document.getElementById('liv-count').textContent=`생활비 내역 (${D().living.length}건)`;
+  document.getElementById('liv-count').textContent='생활비 내역';
   document.getElementById('liv-total').textContent=`합계 ${fmt(total)}원`;
   const tbody=document.getElementById('liv-body');
   if(!rows.length){tbody.innerHTML=`<tr><td colspan="9" class="empty">기록이 없습니다.</td></tr>`;}
   else tbody.innerHTML=rows.map(r=>{
     const isWoon=r['지불자']==='운';
     const done=r['송금완료']===true;
-    return `<tr>
+    return `<tr id="liv-row-${r['id']}">
       <td>${r['날짜']}</td><td>${r['내용']}</td><td>${fmt(r['금액'])}원</td>
       <td><span class="badge ${isWoon?'badge-woon':'badge-jiyun'}">${r['지불자']}</span></td>
       <td>${r['구분']}</td>
       <td style="color:${r['지원금여부']==='O'?'var(--green)':'var(--sub)'}">${r['지원금여부']}</td>
       <td>${r['비고']||''}</td>
       <td><button class="check-btn ${done?'done':''}" onclick="toggleLivingCheck('${r['id']}')">${done?'✅':'☐'}</button></td>
-      <td><button class="del-btn" onclick="deleteLiving('${r['id']}')">삭제</button></td>
+      <td style="display:flex;gap:4px">
+        <button class="add-btn" style="padding:3px 8px;font-size:12px;margin-top:0;background:var(--accent-light);color:var(--accent)" onclick="editLiving('${r['id']}')">수정</button>
+        <button class="del-btn" onclick="deleteLiving('${r['id']}')">삭제</button>
+      </td>
     </tr>`;
   }).join('');
   document.getElementById('liv-agg-card').innerHTML=aggTableHTML(D().living,'구분');
@@ -684,17 +714,20 @@ function renderJiyun(){
       ${miniProgressHTML('💳 용돈',pktUsed,POCKET_LIMIT,'var(--jiyun)')}
     </div>`;
   const rows=[...d.jiyun].reverse();
-  document.getElementById('ji-count').textContent=`지윤 소비 내역 (${d.jiyun.length}건)`;
+  document.getElementById('ji-count').textContent='지윤 소비 내역';
   document.getElementById('ji-total').textContent=`합계 ${fmt(jiUsed)}원`;
   const tbody=document.getElementById('ji-body');
   if(!rows.length){tbody.innerHTML=`<tr><td colspan="8" class="empty">기록이 없습니다.</td></tr>`;}
-  else tbody.innerHTML=rows.map(r=>`<tr>
+  else tbody.innerHTML=rows.map(r=>`<tr id="ji-row-${r['id']}">
     <td>${r['날짜']}</td><td>${r['내용']}</td><td>${fmt(r['금액'])}원</td>
     <td style="color:${r['필수지출여부']==='O'?'var(--jiyun)':'var(--sub)'}">${r['필수지출여부']}</td>
     <td>${r['세부구분']}</td>
     <td style="color:${r['지원금여부']==='O'?'var(--green)':'var(--sub)'}">${r['지원금여부']}</td>
     <td>${r['비고']||''}</td>
-    <td><button class="del-btn" onclick="deleteJiyun('${r['id']}')">삭제</button></td>
+    <td style="display:flex;gap:4px">
+      <button class="add-btn" style="padding:3px 8px;font-size:12px;margin-top:0;background:var(--jiyun-light);color:var(--jiyun)" onclick="editJiyun('${r['id']}')">수정</button>
+      <button class="del-btn" onclick="deleteJiyun('${r['id']}')">삭제</button>
+    </td>
   </tr>`).join('');
   document.getElementById('ji-agg-card').innerHTML=aggTableDetailHTML(d.jiyun);
 }
@@ -735,17 +768,20 @@ function renderWoon(){
       ${miniProgressHTML('💳 용돈',pktUsed,POCKET_LIMIT,'var(--woon)')}
     </div>`;
   const rows=[...d.woon].reverse();
-  document.getElementById('wo-count').textContent=`운혁 소비 내역 (${d.woon.length}건)`;
+  document.getElementById('wo-count').textContent='운혁 소비 내역';
   document.getElementById('wo-total').textContent=`합계 ${fmt(woUsed)}원`;
   const tbody=document.getElementById('wo-body');
   if(!rows.length){tbody.innerHTML=`<tr><td colspan="8" class="empty">기록이 없습니다.</td></tr>`;}
-  else tbody.innerHTML=rows.map(r=>`<tr>
+  else tbody.innerHTML=rows.map(r=>`<tr id="wo-row-${r['id']}">
     <td>${r['날짜']}</td><td>${r['내용']}</td><td>${fmt(r['금액'])}원</td>
     <td style="color:${r['필수지출여부']==='O'?'var(--woon)':'var(--sub)'}">${r['필수지출여부']}</td>
     <td>${r['세부구분']}</td>
     <td style="color:${r['지원금여부']==='O'?'var(--green)':'var(--sub)'}">${r['지원금여부']}</td>
     <td>${r['비고']||''}</td>
-    <td><button class="del-btn" onclick="deleteWoon('${r['id']}')">삭제</button></td>
+    <td style="display:flex;gap:4px">
+      <button class="add-btn" style="padding:3px 8px;font-size:12px;margin-top:0;background:var(--woon-light);color:var(--woon)" onclick="editWoon('${r['id']}')">수정</button>
+      <button class="del-btn" onclick="deleteWoon('${r['id']}')">삭제</button>
+    </td>
   </tr>`).join('');
   document.getElementById('wo-agg-card').innerHTML=aggTableDetailHTML(d.woon);
 }
@@ -774,7 +810,7 @@ function renderParking(){
     ${amountCardHTML('현재 잔액',pkBal,'var(--yellow)','var(--yellow-light)')}
     ${amountCardHTML('총 입금',pkIn,'var(--green)','var(--green-light)')}
     ${amountCardHTML('총 출금',pkOut,'var(--red)','var(--red-light)')}`;
-  document.getElementById('pk-count').textContent=`파킹통장 내역 (${rows.length}건)`;
+  document.getElementById('pk-count').textContent='파킹통장 내역';
   document.getElementById('pk-balance').textContent=`잔액 ${fmt(pkBal)}원`;
   const tbody=document.getElementById('pk-body');
   if(!rows.length){tbody.innerHTML=`<tr><td colspan="7" class="empty">기록이 없습니다.</td></tr>`;return;}
@@ -815,6 +851,155 @@ document.getElementById('wo-date').value=today();
 document.getElementById('pk-date').value=today();
 updateJiyunCats();updateWoonCats();
 loadAll();
+
+// ── 수정 함수들 ──────────────────────────────────────────
+function editLiving(id){
+  const r=D().living.find(x=>String(x.id)===String(id));
+  if(!r)return;
+  const newAmt=prompt('금액 수정',r['금액']);
+  if(newAmt===null)return;
+  const newDesc=prompt('내용 수정',r['내용']);
+  if(newDesc===null)return;
+  const newNote=prompt('비고 수정',r['비고']||'');
+  r['금액']=num(newAmt);r['내용']=newDesc;r['비고']=newNote||'';
+  saveData(KEY.living(currentMonth),D().living);
+  renderLiving();renderSummary();setSyncStatus('✅ 수정됨');
+}
+function editJiyun(id){
+  const r=D().jiyun.find(x=>String(x.id)===String(id));
+  if(!r)return;
+  const newAmt=prompt('금액 수정',r['금액']);
+  if(newAmt===null)return;
+  const newDesc=prompt('내용 수정',r['내용']);
+  if(newDesc===null)return;
+  const newNote=prompt('비고 수정',r['비고']||'');
+  r['금액']=num(newAmt);r['내용']=newDesc;r['비고']=newNote||'';
+  saveData(KEY.jiyun(currentMonth),D().jiyun);
+  renderJiyun();renderSummary();setSyncStatus('✅ 수정됨');
+}
+function editWoon(id){
+  const r=D().woon.find(x=>String(x.id)===String(id));
+  if(!r)return;
+  const newAmt=prompt('금액 수정',r['금액']);
+  if(newAmt===null)return;
+  const newDesc=prompt('내용 수정',r['내용']);
+  if(newDesc===null)return;
+  const newNote=prompt('비고 수정',r['비고']||'');
+  r['금액']=num(newAmt);r['내용']=newDesc;r['비고']=newNote||'';
+  saveData(KEY.woon(currentMonth),D().woon);
+  renderWoon();renderSummary();setSyncStatus('✅ 수정됨');
+}
+
+// ── 정산 탭 ──────────────────────────────────────────────
+function renderSettle(){
+  const el=document.getElementById('settle-content');
+  if(!el) return;
+  const d=D(), p=d.plan||{};
+  const inc=p.income||{}, hou=p.housing||{}, tra=p.transport||{};
+  const liv=p.living||{}, hea=p.health||{}, sav=p.savings||{}, poc=p.pocket||{};
+
+  const jiMap={};
+  d.jiyun.forEach(function(r){var k=r['세부구분']||'기타';jiMap[k]=(jiMap[k]||0)+num(r['금액']);});
+  const woMap={};
+  d.woon.forEach(function(r){var k=r['세부구분']||'기타';woMap[k]=(woMap[k]||0)+num(r['금액']);});
+  const livTotal=sum(d.living,'금액');
+  const jiPocket=d.jiyun.filter(function(r){return r['필수지출여부']==='X';}).reduce(function(s,r){return s+num(r['금액']);},0);
+  const woPocket=d.woon.filter(function(r){return r['필수지출여부']==='X';}).reduce(function(s,r){return s+num(r['금액']);},0);
+
+  function diff(plan,actual){
+    var d=actual-plan;
+    if(d===0) return '<span style="color:var(--sub)">-</span>';
+    if(d>0) return '<span style="color:var(--red);font-weight:700">+'+fmt(d)+'원</span>';
+    return '<span style="color:var(--woon);font-weight:700">-'+fmt(Math.abs(d))+'원</span>';
+  }
+
+  function row(label,plan,actual){
+    return '<tr><td style="padding:6px 8px">'+label+'</td>'
+      +'<td style="padding:6px 8px;text-align:right">'+fmt(plan)+'원</td>'
+      +'<td style="padding:6px 8px;text-align:right">'+fmt(actual)+'원</td>'
+      +'<td style="padding:6px 8px;text-align:right">'+diff(plan,actual)+'</td></tr>';
+  }
+
+  function section(title, rowsHTML, pTotal, aTotal){
+    return '<div class="card" style="margin-bottom:12px">'
+      +'<div class="card-title">'+title+'</div>'
+      +'<table style="width:100%;border-collapse:collapse;font-size:13px">'
+      +'<thead><tr style="background:var(--bg)">'
+      +'<th style="padding:6px 8px;text-align:left;color:var(--sub);border-bottom:1px solid var(--border)">항목</th>'
+      +'<th style="padding:6px 8px;text-align:right;color:var(--sub);border-bottom:1px solid var(--border)">계획</th>'
+      +'<th style="padding:6px 8px;text-align:right;color:var(--sub);border-bottom:1px solid var(--border)">실제</th>'
+      +'<th style="padding:6px 8px;text-align:right;color:var(--sub);border-bottom:1px solid var(--border)">차이</th>'
+      +'</tr></thead>'
+      +'<tbody>'+rowsHTML+'</tbody>'
+      +'<tfoot><tr style="border-top:2px solid var(--border);font-weight:700">'
+      +'<td style="padding:6px 8px">소계</td>'
+      +'<td style="padding:6px 8px;text-align:right">'+fmt(pTotal)+'원</td>'
+      +'<td style="padding:6px 8px;text-align:right">'+fmt(aTotal)+'원</td>'
+      +'<td style="padding:6px 8px;text-align:right">'+diff(pTotal,aTotal)+'</td>'
+      +'</tr></tfoot></table></div>';
+  }
+
+  var incPlan=num(inc.woonSalary)+num(inc.woonBonus)+num(inc.jiyunSalary)+num(inc.jiyunBonus);
+
+  var houP=num(hou.rent)+num(hou.management)+num(hou.water)+num(hou.internet);
+  var houA=(jiMap['임대료']||0)+(jiMap['관리비']||0)+(jiMap['정수기']||0)+(jiMap['인터넷']||0);
+  var houHTML=row('임대료',num(hou.rent),jiMap['임대료']||0)
+    +row('관리비',num(hou.management),jiMap['관리비']||0)
+    +row('정수기',num(hou.water),jiMap['정수기']||0)
+    +row('인터넷',num(hou.internet),jiMap['인터넷']||0);
+
+  var traP=num(tra.gas)+num(tra.carInstall)+num(tra.carMaint)+num(tra.carInsure)+num(tra.carTax)+num(tra.carRepair)+num(tra.eungpass);
+  var traA=(woMap['기름값']||0)+(woMap['차 할부금']||0)+(woMap['차 유지비']||0)+(woMap['보험']||0)+(woMap['차 세금']||0)+(woMap['차 수리비']||0)+(jiMap['교통']||0);
+  var traHTML=row('기름값',num(tra.gas),woMap['기름값']||0)
+    +row('차 할부금',num(tra.carInstall),woMap['차 할부금']||0)
+    +row('차 유지비',num(tra.carMaint),woMap['차 유지비']||0)
+    +row('차 보험료',num(tra.carInsure),woMap['보험']||0)
+    +row('차 세금',num(tra.carTax),woMap['차 세금']||0)
+    +row('차 수리비',num(tra.carRepair),woMap['차 수리비']||0)
+    +row('이응패스',num(tra.eungpass),jiMap['교통']||0);
+
+  var livP=num(liv.food)+num(liv.daily);
+  var livHTML=row('식비 및 생활비',livP,livTotal);
+
+  var heaP=num(hea.woonInsure)+num(hea.jiyunInsure)+num(hea.woonSoccer)+num(hea.woonPilates)+num(hea.jiyunPilates);
+  var heaA=(woMap['보험']||0)+(jiMap['보험']||0)+(woMap['축구']||0)+(woMap['필라테스']||0)+(jiMap['필라테스']||0);
+  var heaHTML=row('운혁 보험',num(hea.woonInsure),woMap['보험']||0)
+    +row('지윤 보험',num(hea.jiyunInsure),jiMap['보험']||0)
+    +row('운혁 축구',num(hea.woonSoccer),woMap['축구']||0)
+    +row('운혁 필라테스',num(hea.woonPilates),woMap['필라테스']||0)
+    +row('지윤 필라테스',num(hea.jiyunPilates),jiMap['필라테스']||0);
+
+  var savP=num(sav.woonJT)+num(sav.jiyunJT);
+  var savA=(woMap['주택청약']||0)+(jiMap['주택청약']||0);
+  var savHTML=row('운혁 주택청약',num(sav.woonJT),woMap['주택청약']||0)
+    +row('지윤 주택청약',num(sav.jiyunJT),jiMap['주택청약']||0);
+
+  var pocP=num(poc.woon)+num(poc.jiyun);
+  var pocA=woPocket+jiPocket;
+  var pocHTML=row('운혁 용돈',num(poc.woon),woPocket)
+    +row('지윤 용돈',num(poc.jiyun),jiPocket);
+
+  var totalP=houP+traP+livP+heaP+savP+pocP;
+  var totalA=houA+traA+livTotal+heaA+savA+pocA;
+  var totalD=totalA-totalP;
+  var totalDColor=totalD>0?'var(--red)':'var(--woon)';
+
+  var html='<div class="card" style="margin-bottom:14px;border-left:4px solid var(--accent)">'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">'
+    +'<div><div style="font-size:12px;color:var(--sub)">이번달 수입</div><div style="font-size:17px;font-weight:800;color:var(--green)">'+fmt(incPlan)+'원</div></div>'
+    +'<div><div style="font-size:12px;color:var(--sub)">총 계획 지출</div><div style="font-size:17px;font-weight:800;color:var(--accent)">'+fmt(totalP)+'원</div></div>'
+    +'<div><div style="font-size:12px;color:var(--sub)">총 실제 지출</div><div style="font-size:17px;font-weight:800;color:var(--red)">'+fmt(totalA)+'원</div></div>'
+    +'<div><div style="font-size:12px;color:var(--sub)">계획 대비</div><div style="font-size:17px;font-weight:800;color:'+totalDColor+'">'+(totalD>0?'+':'')+fmt(totalD)+'원</div></div>'
+    +'</div></div>'
+    +section('🏠 주거비',houHTML,houP,houA)
+    +section('🚗 교통비',traHTML,traP,traA)
+    +section('🍚 식비 및 생활비',livHTML,livP,livTotal)
+    +section('💊 건강 및 보험료',heaHTML,heaP,heaA)
+    +section('💰 저축',savHTML,savP,savA)
+    +section('💳 용돈',pocHTML,pocP,pocA);
+
+  el.innerHTML=html;
+}
 setInterval(loadAll,30000);
 </script>
 </body>
