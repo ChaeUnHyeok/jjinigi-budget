@@ -144,7 +144,6 @@ tr:nth-child(even) td{background:#FAFBFC;}
 
 <div id="content">
   <div id="tab-summary" class="tab-panel active">
-    <div class="grid-4" id="summary-top" style="margin-bottom:14px"></div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px" id="summary-cards"></div>
   </div>
 
@@ -247,7 +246,7 @@ const DEFAULT_PLAN={
   health:{woonInsure:0,jiyunInsure:0,woonSoccer:0,woonPilates:0,jiyunPilates:0},
   savings:{woonJT:0,jiyunJT:0},
   pocket:{woon:0,jiyun:0},
-  notes:{}  // 비고 저장
+  notes:{}
 };
 
 let currentMonth="";
@@ -312,7 +311,7 @@ async function loadMonthData(m){
     loadData(KEY.jiyun(m)),loadData(KEY.woon(m)),loadData(KEY.parking(m))
   ]);
   if(!monthData[m]) monthData[m]={plan:deepCopy(DEFAULT_PLAN),living:[],jiyun:[],woon:[],parking:[]};
-  if(plan) monthData[m].plan={...deepCopy(DEFAULT_PLAN),...plan};
+  if(plan){ monthData[m].plan={...deepCopy(DEFAULT_PLAN),...plan,notes:plan.notes||{}}; }
   if(living) monthData[m].living=living;
   if(jiyun) monthData[m].jiyun=jiyun;
   if(woon) monthData[m].woon=woon;
@@ -430,10 +429,10 @@ function aggTableHTML(rows, catKey){
   if(!sorted.length) return '';
   return `<div class="card-title" style="margin-top:4px">구분별 집계</div>
     <table class="agg-table">
-      <thead><tr><th>구분</th><th>금액</th><th>비율</th></tr></thead>
+      <thead><tr><th>구분</th><th>금액</th></tr></thead>
       <tbody>
-        ${sorted.map(([k,v])=>`<tr><td>${k}</td><td>${fmt(v)}원</td><td style="color:var(--sub)">${pct(v,total)}%</td></tr>`).join('')}
-        <tr><td>합계</td><td>${fmt(total)}원</td><td>100%</td></tr>
+        ${sorted.map(([k,v])=>`<tr><td>${k}</td><td>${fmt(v)}원</td></tr>`).join('')}
+        <tr><td>합계</td><td>${fmt(total)}원</td></tr>
       </tbody>
     </table>`;
 }
@@ -459,20 +458,20 @@ function aggTableDetailHTML(rows){
       <div>
         <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:6px">📌 필수지출</div>
         <table class="agg-table">
-          <thead><tr><th>구분</th><th>금액</th><th>비율</th></tr></thead>
+          <thead><tr><th>구분</th><th>금액</th></tr></thead>
           <tbody>
-            ${fRows.map(([k,v])=>`<tr><td>${k}</td><td>${fmt(v)}원</td><td style="color:var(--sub)">${pct(v,fTotal)}%</td></tr>`).join('')}
-            <tr><td>합계</td><td>${fmt(fTotal)}원</td><td>100%</td></tr>
+            ${fRows.map(([k,v])=>`<tr><td>${k}</td><td>${fmt(v)}원</td></tr>`).join('')}
+            <tr><td>합계</td><td>${fmt(fTotal)}원</td></tr>
           </tbody>
         </table>
       </div>
       <div>
         <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:6px">💳 용돈</div>
         <table class="agg-table">
-          <thead><tr><th>구분</th><th>금액</th><th>비율</th></tr></thead>
+          <thead><tr><th>구분</th><th>금액</th></tr></thead>
           <tbody>
-            ${vRows.map(([k,v])=>`<tr><td>${k}</td><td>${fmt(v)}원</td><td style="color:var(--sub)">${pct(v,vTotal)}%</td></tr>`).join('')}
-            <tr><td>합계</td><td>${fmt(vTotal)}원</td><td>100%</td></tr>
+            ${vRows.map(([k,v])=>`<tr><td>${k}</td><td>${fmt(v)}원</td></tr>`).join('')}
+            <tr><td>합계</td><td>${fmt(vTotal)}원</td></tr>
           </tbody>
         </table>
       </div>
@@ -492,11 +491,6 @@ function renderSummary(){
   const pkRows=d.parking,pkBal=pkRows.length>0?num(pkRows[pkRows.length-1]['잔액']):0;
   const pkIn=pkRows.reduce((s,r)=>s+num(r['수입']),0),pkOut=pkRows.reduce((s,r)=>s+num(r['지출']),0);
 
-  document.getElementById('summary-top').innerHTML=`
-    ${amountCardHTML('이번달 수입',ti,'var(--green)','var(--green-light)')}
-    ${amountCardHTML('생활비 전체',livPlan,'var(--accent)','var(--accent-light)')}
-    ${amountCardHTML('파킹통장 잔액',pkBal,'var(--yellow)','var(--yellow-light)',`입금 ${fmt(pkIn)}원 / 출금 ${fmt(pkOut)}원`)}
-  `;
   document.getElementById('summary-cards').innerHTML=`
     <div class="card" style="border-top:3px solid var(--accent)">
       <div class="card-title">🏠 생활비 현황</div>${progressHTML(livUsed,livPlan,'var(--accent)')}${spendingInfoHTML(livUsed,livSup,'var(--accent)')}
@@ -520,35 +514,44 @@ function renderSummary(){
 
 // ── 계획 ─────────────────────────────────────────────────
 function renderPlan(){
-  const p=D().plan;
-  const ti=num(p.income.woonSalary)+num(p.income.woonBonus)+num(p.income.jiyunSalary)+num(p.income.jiyunBonus);
-  const housingSum=Object.values(p.housing).reduce((s,v)=>s+num(v),0);
-  const transSum=Object.values(p.transport).reduce((s,v)=>s+num(v),0);
-  const livingSum=Object.values(p.living).reduce((s,v)=>s+num(v),0);
-  const healthSum=Object.values(p.health).reduce((s,v)=>s+num(v),0);
-  const savingsSum=Object.values(p.savings).reduce((s,v)=>s+num(v),0);
-  const pocketSum=Object.values(p.pocket).reduce((s,v)=>s+num(v),0);
+  const p=D().plan||{};
+  const inc=p.income||{};
+  const hou=p.housing||{};
+  const tra=p.transport||{};
+  const liv=p.living||{};
+  const hea=p.health||{};
+  const sav=p.savings||{};
+  const poc=p.pocket||{};
+
+  const ti=num(inc.woonSalary)+num(inc.woonBonus)+num(inc.jiyunSalary)+num(inc.jiyunBonus);
+  const housingSum=Object.values(hou).reduce((s,v)=>s+num(v),0);
+  const transSum=Object.values(tra).reduce((s,v)=>s+num(v),0);
+  const livingSum=Object.values(liv).reduce((s,v)=>s+num(v),0);
+  const healthSum=Object.values(hea).reduce((s,v)=>s+num(v),0);
+  const savingsSum=Object.values(sav).reduce((s,v)=>s+num(v),0);
+  const pocketSum=Object.values(poc).reduce((s,v)=>s+num(v),0);
   const totalExp=housingSum+transSum+livingSum+healthSum+savingsSum+pocketSum;
   const leftover=ti-totalExp;
-  const savPct=pct(leftover,ti),expPct=pct(totalExp,ti);
+  const savPct=ti>0?Math.round(leftover/ti*100):0;
+  const expPct=ti>0?Math.round(totalExp/ti*100):0;
 
-  const jiExp=num(p.housing.rent)+num(p.housing.management)+num(p.housing.water)+num(p.housing.internet)+num(p.transport.eungpass)+num(p.living.food)+num(p.living.daily)+num(p.health.jiyunInsure)+num(p.health.jiyunPilates)+num(p.savings.jiyunJT)+num(p.pocket.jiyun);
-  const jiInc=num(p.income.jiyunSalary)+num(p.income.jiyunBonus);
+  const jiExp=num(hou.rent)+num(hou.management)+num(hou.water)+num(hou.internet)+num(tra.eungpass)+num(liv.food)+num(liv.daily)+num(hea.jiyunInsure)+num(hea.jiyunPilates)+num(sav.jiyunJT)+num(poc.jiyun);
+  const jiInc=num(inc.jiyunSalary)+num(inc.jiyunBonus);
   const jiPark=jiInc-jiExp;
-  const woExp=num(p.transport.gas)+num(p.transport.carInstall)+num(p.transport.carMaint)+num(p.transport.carInsure)+num(p.transport.carTax)+num(p.transport.carRepair)+num(p.health.woonInsure)+num(p.health.woonSoccer)+num(p.health.woonPilates)+num(p.savings.woonJT)+num(p.pocket.woon);
-  const woInc=num(p.income.woonSalary)+num(p.income.woonBonus);
+  const woExp=num(tra.gas)+num(tra.carInstall)+num(tra.carMaint)+num(tra.carInsure)+num(tra.carTax)+num(tra.carRepair)+num(hea.woonInsure)+num(hea.woonSoccer)+num(hea.woonPilates)+num(sav.woonJT)+num(poc.woon);
+  const woInc=num(inc.woonSalary)+num(inc.woonBonus);
   const woPark=woInc-woExp;
 
-  const PR=(sec,key,label)=>planRow(sec,key,label,ti);
+  const PR=(sec,key,label,noNote=false)=>planRow(sec,key,label,noNote);
 
   document.getElementById('plan-content').innerHTML=`
-    ${planSection('📥 수입',ti,'var(--green)',[PR('income','woonSalary','운혁 급여'),PR('income','woonBonus','운혁 인센티브'),PR('income','jiyunSalary','지윤 급여'),PR('income','jiyunBonus','지윤 인센티브')],true)}
-    ${planSection('🏠 주거비',housingSum,'',ti,[PR('housing','rent','임대료'),PR('housing','management','관리비'),PR('housing','water','정수기'),PR('housing','internet','인터넷')])}
-    ${planSection('🚗 교통비',transSum,'',ti,[PR('transport','gas','기름값'),PR('transport','carInstall','차 할부금'),PR('transport','carMaint','차 유지비'),PR('transport','carInsure','차 보험료'),PR('transport','carTax','차 세금'),PR('transport','carRepair','차 수리비'),PR('transport','eungpass','이응패스')])}
-    ${planSection('🍚 식비 및 생활비',livingSum,'',ti,[PR('living','food','식생활비'),PR('living','daily','생필품')])}
-    ${planSection('💊 건강 및 보험료',healthSum,'',ti,[PR('health','woonInsure','운혁 보험'),PR('health','jiyunInsure','지윤 보험'),PR('health','woonSoccer','운혁 축구'),PR('health','woonPilates','운혁 필라테스'),PR('health','jiyunPilates','지윤 필라테스')])}
-    ${planSection('💰 저축',savingsSum,'',ti,[PR('savings','woonJT','운혁 주택청약'),PR('savings','jiyunJT','지윤 주택청약')])}
-    ${planSection('💳 용돈',pocketSum,'',ti,[PR('pocket','woon','운혁'),PR('pocket','jiyun','지윤')])}
+    ${PS('📥 수입',ti,'var(--green)',[PR('income','woonSalary','운혁 급여',true),PR('income','woonBonus','운혁 인센티브',true),PR('income','jiyunSalary','지윤 급여',true),PR('income','jiyunBonus','지윤 인센티브',true)],true)}
+    ${PS('🏠 주거비',housingSum,'',[PR('housing','rent','임대료'),PR('housing','management','관리비'),PR('housing','water','정수기'),PR('housing','internet','인터넷')])}
+    ${PS('🚗 교통비',transSum,'',[PR('transport','gas','기름값'),PR('transport','carInstall','차 할부금'),PR('transport','carMaint','차 유지비'),PR('transport','carInsure','차 보험료'),PR('transport','carTax','차 세금'),PR('transport','carRepair','차 수리비'),PR('transport','eungpass','이응패스')])}
+    ${PS('🍚 식비 및 생활비',livingSum,'',[PR('living','food','식생활비'),PR('living','daily','생필품')])}
+    ${PS('💊 건강 및 보험료',healthSum,'',[PR('health','woonInsure','운혁 보험'),PR('health','jiyunInsure','지윤 보험'),PR('health','woonSoccer','운혁 축구'),PR('health','woonPilates','운혁 필라테스'),PR('health','jiyunPilates','지윤 필라테스')])}
+    ${PS('💰 저축',savingsSum,'',[PR('savings','woonJT','운혁 주택청약'),PR('savings','jiyunJT','지윤 주택청약')])}
+    ${PS('💳 용돈',pocketSum,'',[PR('pocket','woon','운혁'),PR('pocket','jiyun','지윤')])}
     <div class="card">
       <div class="card-title">📊 이번달 결산</div>
       <div class="result-row"><span>총 수입</span><span style="color:var(--green);font-weight:700">${fmt(ti)}원</span></div>
@@ -570,26 +573,28 @@ function renderPlan(){
   `;
 }
 
-function planSection(title,total,color,ti,rows,isIncome=false){
-  const p=ti>0?Math.round(total/ti*100):0;
+function PS(title,total,color,rows,isIncome=false){
   return `<div class="card">
     <div class="section-header">
       <span class="s-title">${title}</span>
-      <span class="s-total" style="color:${color||'var(--accent)'}">
-        ${fmt(total)}원 ${!isIncome&&ti>0?`<span style="font-size:11px;color:var(--sub)">(${p}%)</span>`:''}
-      </span>
+      <span class="s-total" style="color:${color||'var(--accent)'}">${fmt(total)}원</span>
     </div>
     <div style="display:grid;grid-template-columns:${isIncome?'1fr 1fr':'1fr'};gap:0 12px">${rows.join('')}</div>
   </div>`;
 }
 
-function planRow(sec,key,label,ti){
-  const val=D().plan[sec]?.[key]||'';
-  const noteVal=(D().plan.notes&&D().plan.notes[sec+'_'+key])||'';
+function planSection(title,total,color,ti,rows,isIncome=false){
+  return PS(title,total,color,rows,isIncome);
+}
+
+function planRow(sec,key,label,noNote=false){
+  const p=D().plan||{};
+  const val=(p[sec]&&p[sec][key]!==undefined)?p[sec][key]:'';
+  const noteVal=(p.notes&&p.notes[sec+'_'+key])||'';
   return `<div class="plan-row">
     <span class="p-label">${label}</span>
     <div class="p-amt"><input type="number" value="${val}" placeholder="0" oninput="updatePlan('${sec}','${key}',this.value)"/><span class="won">원</span></div>
-    <div class="p-note"><input type="text" value="${noteVal}" placeholder="비고" style="font-size:12px;" oninput="updatePlanNote('${sec}','${key}',this.value)"/></div>
+    ${noNote?'':`<div class="p-note"><input type="text" value="${noteVal}" placeholder="비고" style="font-size:12px;" oninput="updatePlanNote('${sec}','${key}',this.value)"/></div>`}
   </div>`;
 }
 
