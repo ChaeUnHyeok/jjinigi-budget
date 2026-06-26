@@ -6,113 +6,125 @@
 <title>💑 찌니기 가계부</title>
 <style>
   :root {
-    --bg: #F7F8FA; --card: #FFFFFF; --border: #E8EAF0;
-    --accent: #5C6BC0; --accent-light: #E8EAF6;
-    --woon: #4A90D9; --woon-light: #E3F0FA;
-    --jiyun: #E05C8A; --jiyun-light: #FCE8F0;
-    --text: #1A1D2E; --sub: #6B7280;
-    --green: #22C55E; --green-light: #DCFCE7;
-    --red: #EF4444; --red-light: #FEE2E2;
-    --yellow: #F59E0B; --yellow-light: #FEF3C7;
+    --bg:#F7F8FA;--card:#FFFFFF;--border:#E8EAF0;
+    --accent:#5C6BC0;--accent-light:#E8EAF6;
+    --woon:#4A90D9;--woon-light:#E3F0FA;
+    --jiyun:#E05C8A;--jiyun-light:#FCE8F0;
+    --text:#1A1D2E;--sub:#6B7280;
+    --green:#22C55E;--green-light:#DCFCE7;
+    --red:#EF4444;--red-light:#FEE2E2;
+    --yellow:#F59E0B;--yellow-light:#FEF3C7;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); font-family: 'Apple SD Gothic Neo','Noto Sans KR',sans-serif; color: var(--text); font-size: 14px; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:var(--text);font-size:14px;}
 
-  #header { background: var(--card); border-bottom: 1px solid var(--border); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-  #header .title { font-weight: 800; font-size: 17px; letter-spacing: -0.5px; }
-  #header .sync { font-size: 11px; color: var(--sub); margin-top: 3px; }
-  #refresh-btn { background: var(--accent-light); color: var(--accent); border: none; border-radius: 8px; padding: 6px 14px; cursor: pointer; font-weight: 700; font-size: 12px; }
+  /* 헤더 */
+  #header{background:var(--card);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+  .title{font-weight:800;font-size:16px;letter-spacing:-0.5px;}
+  .sync{font-size:11px;color:var(--sub);margin-top:2px;}
+  #refresh-btn{background:var(--accent-light);color:var(--accent);border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-weight:700;font-size:12px;}
 
-  #tabs { background: var(--card); border-bottom: 1px solid var(--border); display: flex; overflow-x: auto; }
-  .tab-btn { padding: 11px 16px; border: none; background: none; cursor: pointer; font-size: 13px; color: var(--sub); font-weight: 500; white-space: nowrap; border-bottom: 2.5px solid transparent; transition: color .2s; }
-  .tab-btn.active { color: var(--accent); font-weight: 700; border-bottom-color: var(--accent); }
+  /* 월 선택 바 */
+  #month-bar{background:var(--card);border-bottom:1px solid var(--border);padding:8px 16px;display:flex;align-items:center;gap:8px;position:sticky;top:57px;z-index:190;overflow-x:auto;}
+  .month-btn{padding:5px 14px;border:1px solid var(--border);background:none;border-radius:99px;cursor:pointer;font-size:13px;color:var(--sub);white-space:nowrap;transition:all .2s;}
+  .month-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700;}
+  #add-month-btn{padding:5px 12px;border:1px dashed var(--border);background:none;border-radius:99px;cursor:pointer;font-size:13px;color:var(--sub);}
 
-  #content { max-width: 960px; margin: 0 auto; padding: 20px 16px; }
-  .tab-panel { display: none; }
-  .tab-panel.active { display: block; }
+  /* 서브탭 */
+  #tabs{background:var(--card);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;}
+  .tab-btn{padding:10px 14px;border:none;background:none;cursor:pointer;font-size:13px;color:var(--sub);font-weight:500;white-space:nowrap;border-bottom:2.5px solid transparent;transition:color .2s;}
+  .tab-btn.active{color:var(--accent);font-weight:700;border-bottom-color:var(--accent);}
 
-  .card { background: var(--card); border-radius: 14px; border: 1px solid var(--border); padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); margin-bottom: 14px; }
-  .card-title { font-weight: 700; font-size: 14px; margin-bottom: 12px; }
+  #content{max-width:960px;margin:0 auto;padding:16px;}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
 
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
-  .grid-4 { display: grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap: 12px; }
-  .grid-form { display: grid; grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); gap: 10px; margin-bottom: 12px; }
+  .card{background:var(--card);border-radius:14px;border:1px solid var(--border);padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,0.05);margin-bottom:14px;}
+  .card-title{font-weight:700;font-size:14px;margin-bottom:12px;}
 
-  .amount-card { border-radius: 12px; padding: 14px 16px; }
-  .amount-card .label { font-size: 12px; color: var(--sub); margin-bottom: 4px; }
-  .amount-card .value { font-size: 20px; font-weight: 800; }
-  .amount-card .sub { font-size: 11px; color: var(--sub); margin-top: 4px; }
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  .grid-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;}
+  .grid-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:10px;}
 
-  .progress-info { display: flex; justify-content: space-between; font-size: 11px; color: var(--sub); margin-bottom: 4px; }
-  .progress-bar { background: var(--border); border-radius: 99px; height: 7px; }
-  .progress-fill { height: 7px; border-radius: 99px; transition: width .4s; }
-  .progress-sub { font-size: 11px; color: var(--sub); margin-top: 4px; }
+  .amount-card{border-radius:12px;padding:12px 14px;}
+  .amount-card .label{font-size:11px;color:var(--sub);margin-bottom:3px;}
+  .amount-card .value{font-size:18px;font-weight:800;}
+  .amount-card .sub{font-size:11px;color:var(--sub);margin-top:3px;}
 
-  label.field-label { font-size: 11px; color: var(--sub); display: block; margin-bottom: 4px; }
-  input, select { border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; font-size: 13px; outline: none; background: var(--card); color: var(--text); width: 100%; }
-  input:focus, select:focus { border-color: var(--accent); }
+  .progress-info{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin-bottom:4px;}
+  .progress-bar{background:var(--border);border-radius:99px;height:7px;}
+  .progress-fill{height:7px;border-radius:99px;transition:width .4s;}
+  .progress-sub{font-size:11px;color:var(--sub);margin-top:3px;}
 
-  .add-btn { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 8px 20px; cursor: pointer; font-weight: 700; font-size: 13px; margin-top: 4px; }
-  .del-btn { background: var(--red-light); color: var(--red); border: none; border-radius: 6px; padding: 3px 8px; cursor: pointer; font-size: 12px; }
+  .spending-info{margin-top:8px;font-size:12px;display:flex;gap:16px;flex-wrap:wrap;}
 
-  .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { padding: 8px 10px; text-align: left; color: var(--sub); font-weight: 600; white-space: nowrap; border-bottom: 1px solid var(--border); background: var(--bg); }
-  td { padding: 8px 10px; white-space: nowrap; border-bottom: 1px solid var(--border); }
-  tr:nth-child(even) td { background: #FAFBFC; }
+  /* 세부달성률 1행2열 */
+  .mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border);}
+  .mini-progress-label{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;}
+  .mini-progress-bar{background:var(--border);border-radius:99px;height:5px;}
+  .mini-progress-fill{height:5px;border-radius:99px;}
 
-  .badge { padding: 2px 8px; border-radius: 12px; font-weight: 700; font-size: 12px; }
-  .badge-woon { background: var(--woon-light); color: var(--woon); }
-  .badge-jiyun { background: var(--jiyun-light); color: var(--jiyun); }
-  .badge-joint { background: var(--accent-light); color: var(--accent); }
+  label.field-label{font-size:11px;color:var(--sub);display:block;margin-bottom:3px;}
+  input,select{border:1px solid var(--border);border-radius:8px;padding:5px 9px;font-size:13px;outline:none;background:var(--card);color:var(--text);width:100%;}
+  input:focus,select:focus{border-color:var(--accent);}
 
-  .plan-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-  .plan-row span { font-size: 13px; color: var(--sub); min-width: 130px; flex-shrink: 0; }
-  .plan-row .amount-wrap { position: relative; flex: 1; }
-  .plan-row input { padding-right: 28px; }
-  .plan-row .won { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--sub); }
+  .add-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:7px 18px;cursor:pointer;font-weight:700;font-size:13px;margin-top:4px;}
+  .del-btn{background:var(--red-light);color:var(--red);border:none;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:12px;}
 
-  .section-header { display: flex; justify-content: space-between; margin-bottom: 12px; }
-  .section-header .s-title { font-weight: 700; font-size: 14px; }
-  .section-header .s-total { font-weight: 700; font-size: 14px; color: var(--accent); }
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{padding:7px 9px;text-align:left;color:var(--sub);font-weight:600;white-space:nowrap;border-bottom:1px solid var(--border);background:var(--bg);}
+  td{padding:7px 9px;white-space:nowrap;border-bottom:1px solid var(--border);}
+  tr:nth-child(even) td{background:#FAFBFC;}
 
-  .result-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
-  .result-row:last-child { border-bottom: none; }
-  .result-row.total { font-weight: 800; font-size: 15px; }
+  .badge{padding:2px 8px;border-radius:12px;font-weight:700;font-size:12px;}
+  .badge-woon{background:var(--woon-light);color:var(--woon);}
+  .badge-jiyun{background:var(--jiyun-light);color:var(--jiyun);}
+  .badge-joint{background:var(--accent-light);color:var(--accent);}
 
-  /* 달성률 미니 진행바 */
-  .mini-progress { margin-top: 10px; }
-  .mini-progress-label { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px; }
-  .mini-progress-bar { background: var(--border); border-radius: 99px; height: 5px; }
-  .mini-progress-fill { height: 5px; border-radius: 99px; }
+  .section-header{display:flex;justify-content:space-between;margin-bottom:10px;}
+  .s-title{font-weight:700;font-size:14px;}
+  .s-total{font-weight:700;font-size:14px;color:var(--accent);}
 
-  #loading { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; z-index: 999; }
-  .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .empty { text-align: center; padding: 30px 0; color: var(--sub); font-size: 13px; }
+  .plan-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+  .plan-row span{font-size:13px;color:var(--sub);min-width:120px;flex-shrink:0;}
+  .plan-row .aw{position:relative;flex:1;}
+  .plan-row input{padding-right:26px;}
+  .plan-row .won{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--sub);}
 
-  @media (max-width: 600px) {
-    .grid-2, .grid-3 { grid-template-columns: 1fr; }
-    .grid-4 { grid-template-columns: 1fr 1fr; }
+  .result-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:14px;}
+  .result-row:last-child{border-bottom:none;}
+  .result-row.bold{font-weight:800;font-size:15px;}
+
+  #loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:999;}
+  .spinner{width:34px;height:34px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .empty{text-align:center;padding:28px 0;color:var(--sub);font-size:13px;}
+
+  @media(max-width:600px){
+    .grid-2,.grid-3{grid-template-columns:1fr;}
+    .grid-4{grid-template-columns:1fr 1fr;}
+    .mini-grid{grid-template-columns:1fr 1fr;}
   }
 </style>
 </head>
 <body>
 
-<div id="loading">
-  <div class="spinner"></div>
-  <span style="color:var(--sub);font-size:14px">데이터 불러오는 중...</span>
-</div>
+<div id="loading"><div class="spinner"></div><span style="color:var(--sub);font-size:14px">데이터 불러오는 중...</span></div>
 
 <div id="header">
-  <div>
-    <div class="title">💑 찌니기 가계부</div>
-    <div class="sync" id="sync-status">연결 중...</div>
-  </div>
+  <div><div class="title">💑 찌니기 가계부</div><div class="sync" id="sync-status">연결 중...</div></div>
   <button id="refresh-btn" onclick="loadAll()">🔄 새로고침</button>
 </div>
 
+<!-- 월 선택 -->
+<div id="month-bar">
+  <div id="month-btns"></div>
+  <button id="add-month-btn" onclick="addMonth()">+ 월 추가</button>
+</div>
+
+<!-- 서브탭 -->
 <div id="tabs">
   <button class="tab-btn active" onclick="switchTab('summary',this)">📊 요약</button>
   <button class="tab-btn" onclick="switchTab('plan',this)">📋 계획</button>
@@ -123,251 +135,311 @@
 </div>
 
 <div id="content">
-
-  <!-- 요약 -->
   <div id="tab-summary" class="tab-panel active">
     <div class="grid-4" id="summary-top" style="margin-bottom:14px"></div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px" id="summary-cards"></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px" id="summary-cards"></div>
   </div>
 
-  <!-- 계획 -->
-  <div id="tab-plan" class="tab-panel">
-    <div id="plan-content"></div>
-  </div>
+  <div id="tab-plan" class="tab-panel"><div id="plan-content"></div></div>
 
-  <!-- 생활비 -->
   <div id="tab-living" class="tab-panel">
     <div class="card">
       <div class="card-title">새 항목 추가</div>
       <div class="grid-form">
-        <div><label class="field-label">날짜</label><input type="date" id="liv-date" /></div>
-        <div><label class="field-label">내용</label><input type="text" id="liv-desc" placeholder="내용 입력" /></div>
-        <div><label class="field-label">금액 (원)</label><input type="number" id="liv-amount" placeholder="0" /></div>
-        <div><label class="field-label">지불자</label>
-          <select id="liv-payer"><option value="운">운</option><option value="지">지</option></select>
-        </div>
-        <div><label class="field-label">구분</label>
-          <select id="liv-cat">
-            <option>생필품</option><option>교통</option><option>간식</option><option>외식</option>
-            <option>식비</option><option>카페</option><option>선물</option><option>필수지출</option><option>기타</option>
-          </select>
-        </div>
-        <div><label class="field-label">지원금</label>
-          <select id="liv-support"><option value="X">X</option><option value="O">O</option></select>
-        </div>
-        <div><label class="field-label">비고</label><input type="text" id="liv-note" placeholder="선택" /></div>
+        <div><label class="field-label">날짜</label><input type="date" id="liv-date"/></div>
+        <div><label class="field-label">내용</label><input type="text" id="liv-desc" placeholder="내용 입력"/></div>
+        <div><label class="field-label">금액(원)</label><input type="number" id="liv-amount" placeholder="0"/></div>
+        <div><label class="field-label">지불자</label><select id="liv-payer"><option value="운">운</option><option value="지">지</option></select></div>
+        <div><label class="field-label">구분</label><select id="liv-cat"><option>생필품</option><option>교통</option><option>간식</option><option>외식</option><option>식비</option><option>카페</option><option>선물</option><option>필수지출</option><option>기타</option></select></div>
+        <div><label class="field-label">지원금</label><select id="liv-support"><option value="X">X</option><option value="O">O</option></select></div>
+        <div><label class="field-label">비고</label><input type="text" id="liv-note" placeholder="선택"/></div>
       </div>
       <button class="add-btn" onclick="addLiving()">+ 추가</button>
     </div>
     <div class="card">
-      <div class="section-header">
-        <span class="s-title" id="liv-count">생활비 내역</span>
-        <span class="s-total" id="liv-total"></span>
-      </div>
-      <div class="table-wrap"><table><thead><tr>
-        <th>날짜</th><th>내용</th><th>금액</th><th>지불자</th><th>구분</th><th>지원금</th><th>비고</th><th></th>
-      </tr></thead><tbody id="liv-body"></tbody></table></div>
+      <div class="section-header"><span class="s-title" id="liv-count">생활비 내역</span><span class="s-total" id="liv-total"></span></div>
+      <div class="table-wrap"><table><thead><tr><th>날짜</th><th>내용</th><th>금액</th><th>지불자</th><th>구분</th><th>지원금</th><th>비고</th><th></th></tr></thead><tbody id="liv-body"></tbody></table></div>
     </div>
   </div>
 
-  <!-- 지윤소비 -->
   <div id="tab-jiyun" class="tab-panel">
     <div class="card" id="jiyun-progress-card" style="border-top:3px solid var(--jiyun)"></div>
     <div class="card">
       <div class="card-title">새 항목 추가</div>
       <div class="grid-form">
-        <div><label class="field-label">날짜</label><input type="date" id="ji-date" /></div>
-        <div><label class="field-label">내용</label><input type="text" id="ji-desc" placeholder="내용 입력" /></div>
-        <div><label class="field-label">금액 (원)</label><input type="number" id="ji-amount" placeholder="0" /></div>
-        <div><label class="field-label">고정지출</label>
-          <select id="ji-fixed" onchange="updateJiyunCats()"><option value="X">X</option><option value="O">O</option></select>
-        </div>
+        <div><label class="field-label">날짜</label><input type="date" id="ji-date"/></div>
+        <div><label class="field-label">내용</label><input type="text" id="ji-desc" placeholder="내용 입력"/></div>
+        <div><label class="field-label">금액(원)</label><input type="number" id="ji-amount" placeholder="0"/></div>
+        <div><label class="field-label">필수지출 여부</label><select id="ji-fixed" onchange="updateJiyunCats()"><option value="X">X</option><option value="O">O</option></select></div>
         <div><label class="field-label">세부 구분</label><select id="ji-cat"></select></div>
-        <div><label class="field-label">지원금</label>
-          <select id="ji-support"><option value="X">X</option><option value="O">O</option></select>
-        </div>
-        <div><label class="field-label">비고</label><input type="text" id="ji-note" placeholder="선택" /></div>
+        <div><label class="field-label">지원금</label><select id="ji-support"><option value="X">X</option><option value="O">O</option></select></div>
+        <div><label class="field-label">비고</label><input type="text" id="ji-note" placeholder="선택"/></div>
       </div>
       <button class="add-btn" style="background:var(--jiyun)" onclick="addJiyun()">+ 추가</button>
     </div>
     <div class="card">
-      <div class="section-header">
-        <span class="s-title" id="ji-count">지윤 소비 내역</span>
-        <span class="s-total" style="color:var(--jiyun)" id="ji-total"></span>
-      </div>
-      <div class="table-wrap"><table><thead><tr>
-        <th>날짜</th><th>내용</th><th>금액</th><th>고정</th><th>구분</th><th>지원금</th><th>비고</th><th></th>
-      </tr></thead><tbody id="ji-body"></tbody></table></div>
+      <div class="section-header"><span class="s-title" id="ji-count">지윤 소비 내역</span><span class="s-total" style="color:var(--jiyun)" id="ji-total"></span></div>
+      <div class="table-wrap"><table><thead><tr><th>날짜</th><th>내용</th><th>금액</th><th>필수</th><th>구분</th><th>지원금</th><th>비고</th><th></th></tr></thead><tbody id="ji-body"></tbody></table></div>
     </div>
   </div>
 
-  <!-- 운혁소비 -->
   <div id="tab-woon" class="tab-panel">
     <div class="card" id="woon-progress-card" style="border-top:3px solid var(--woon)"></div>
     <div class="card">
       <div class="card-title">새 항목 추가</div>
       <div class="grid-form">
-        <div><label class="field-label">날짜</label><input type="date" id="wo-date" /></div>
-        <div><label class="field-label">내용</label><input type="text" id="wo-desc" placeholder="내용 입력" /></div>
-        <div><label class="field-label">금액 (원)</label><input type="number" id="wo-amount" placeholder="0" /></div>
-        <div><label class="field-label">구분</label>
-          <select id="wo-cat">
-            <option>핸드폰</option><option>구독료</option><option>선물</option><option>식비</option>
-            <option>카페</option><option>생필품</option><option>공부</option><option>미용</option>
-            <option>기타</option><option>필수지출</option><option>주택청약</option>
-          </select>
-        </div>
-        <div><label class="field-label">지원금</label>
-          <select id="wo-support"><option value="X">X</option><option value="O">O</option></select>
-        </div>
-        <div><label class="field-label">비고</label><input type="text" id="wo-note" placeholder="선택" /></div>
+        <div><label class="field-label">날짜</label><input type="date" id="wo-date"/></div>
+        <div><label class="field-label">내용</label><input type="text" id="wo-desc" placeholder="내용 입력"/></div>
+        <div><label class="field-label">금액(원)</label><input type="number" id="wo-amount" placeholder="0"/></div>
+        <div><label class="field-label">필수지출 여부</label><select id="wo-fixed" onchange="updateWoonCats()"><option value="X">X</option><option value="O">O</option></select></div>
+        <div><label class="field-label">세부 구분</label><select id="wo-cat"></select></div>
+        <div><label class="field-label">지원금</label><select id="wo-support"><option value="X">X</option><option value="O">O</option></select></div>
+        <div><label class="field-label">비고</label><input type="text" id="wo-note" placeholder="선택"/></div>
       </div>
       <button class="add-btn" style="background:var(--woon)" onclick="addWoon()">+ 추가</button>
     </div>
     <div class="card">
-      <div class="section-header">
-        <span class="s-title" id="wo-count">운혁 소비 내역</span>
-        <span class="s-total" style="color:var(--woon)" id="wo-total"></span>
-      </div>
-      <div class="table-wrap"><table><thead><tr>
-        <th>날짜</th><th>내용</th><th>금액</th><th>구분</th><th>지원금</th><th>비고</th><th></th>
-      </tr></thead><tbody id="wo-body"></tbody></table></div>
+      <div class="section-header"><span class="s-title" id="wo-count">운혁 소비 내역</span><span class="s-total" style="color:var(--woon)" id="wo-total"></span></div>
+      <div class="table-wrap"><table><thead><tr><th>날짜</th><th>내용</th><th>금액</th><th>필수</th><th>구분</th><th>지원금</th><th>비고</th><th></th></tr></thead><tbody id="wo-body"></tbody></table></div>
     </div>
   </div>
 
-  <!-- 파킹통장 -->
   <div id="tab-parking" class="tab-panel">
     <div class="grid-3" id="parking-top" style="margin-bottom:14px"></div>
     <div class="card">
       <div class="card-title">새 항목 추가</div>
       <div class="grid-form">
-        <div><label class="field-label">날짜</label><input type="date" id="pk-date" /></div>
-        <div><label class="field-label">사람</label>
-          <select id="pk-person"><option>공동</option><option>지윤</option><option>운혁</option></select>
-        </div>
-        <div><label class="field-label">내용</label><input type="text" id="pk-desc" placeholder="내용 입력" /></div>
-        <div><label class="field-label">수입 (원)</label><input type="number" id="pk-income" placeholder="0" /></div>
-        <div><label class="field-label">지출 (원)</label><input type="number" id="pk-expense" placeholder="0" /></div>
+        <div><label class="field-label">날짜</label><input type="date" id="pk-date"/></div>
+        <div><label class="field-label">사람</label><select id="pk-person"><option>공동</option><option>지윤</option><option>운혁</option></select></div>
+        <div><label class="field-label">내용</label><input type="text" id="pk-desc" placeholder="내용 입력"/></div>
+        <div><label class="field-label">수입(원)</label><input type="number" id="pk-income" placeholder="0"/></div>
+        <div><label class="field-label">지출(원)</label><input type="number" id="pk-expense" placeholder="0"/></div>
       </div>
       <button class="add-btn" style="background:var(--yellow)" onclick="addParking()">+ 추가</button>
     </div>
     <div class="card">
-      <div class="section-header">
-        <span class="s-title" id="pk-count">파킹통장 내역</span>
-        <span class="s-total" style="color:var(--yellow)" id="pk-balance"></span>
-      </div>
-      <div class="table-wrap"><table><thead><tr>
-        <th>날짜</th><th>사람</th><th>내용</th><th>수입</th><th>지출</th><th>잔액</th><th></th>
-      </tr></thead><tbody id="pk-body"></tbody></table></div>
+      <div class="section-header"><span class="s-title" id="pk-count">파킹통장 내역</span><span class="s-total" style="color:var(--yellow)" id="pk-balance"></span></div>
+      <div class="table-wrap"><table><thead><tr><th>날짜</th><th>사람</th><th>내용</th><th>수입</th><th>지출</th><th>잔액</th><th></th></tr></thead><tbody id="pk-body"></tbody></table></div>
     </div>
   </div>
-
 </div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbyb8knkSF1tSMFaTtAhMZ24jMb9_kgB6WKvYZx3-5-_-kBEGAJaKhgJRhSFUJEMvUBAYA/exec";
-const POCKET_LIMIT = 300000; // 용돈 30만원
+const API="https://script.google.com/macros/s/AKfycbyb8knkSF1tSMFaTtAhMZ24jMb9_kgB6WKvYZx3-5-_-kBEGAJaKhgJRhSFUJEMvUBAYA/exec";
+const POCKET_LIMIT=300000;
 
-let STATE = {
-  plan: {
-    income:{woonSalary:0,woonBonus:0,jiyunSalary:0,jiyunBonus:0},
-    housing:{rent:0,management:0,water:0,internet:0},
-    transport:{gas:0,carInstall:0,carMaint:0,carInsure:0,carTax:0,carRepair:0,eungpass:0},
-    living:{food:0,daily:0},
-    health:{woonInsure:0,jiyunInsure:0,woonSoccer:0,woonPilates:0,jiyunPilates:0},
-    savings:{woonJT:0,jiyunJT:0},
-    pocket:{woon:0,jiyun:0}
-  },
-  living:[], jiyun:[], woon:[], parking:[]
+// ── 상태 ─────────────────────────────────────────────────
+const DEFAULT_PLAN={
+  income:{woonSalary:0,woonBonus:0,jiyunSalary:0,jiyunBonus:0},
+  housing:{rent:0,management:0,water:0,internet:0},
+  transport:{gas:0,carInstall:0,carMaint:0,carInsure:0,carTax:0,carRepair:0,eungpass:0},
+  living:{food:0,daily:0},
+  health:{woonInsure:0,jiyunInsure:0,woonSoccer:0,woonPilates:0,jiyunPilates:0},
+  savings:{woonJT:0,jiyunJT:0},
+  pocket:{woon:0,jiyun:0}
 };
-let planSaveTimer = null;
 
-const fmt = n => (Number(n)||0).toLocaleString('ko-KR');
-const num = v => Number(String(v).replace(/,/g,''))||0;
-const today = () => new Date().toISOString().slice(0,10);
-const sum = (arr,key) => arr.reduce((s,r)=>s+num(r[key]||0),0);
+let currentMonth="";
+let months=[]; // ["2025-06","2025-07",...]
+let monthData={}; // {month: {plan,living,jiyun,woon,parking}}
+let planSaveTimer=null;
 
-async function apiGet(params) {
-  const r = await fetch(API+'?'+new URLSearchParams(params));
-  return r.json();
+// ── 유틸 ─────────────────────────────────────────────────
+const fmt=n=>(Number(n)||0).toLocaleString('ko-KR');
+const num=v=>Number(String(v).replace(/,/g,''))||0;
+const today=()=>new Date().toISOString().slice(0,10);
+const thisMonth=()=>new Date().toISOString().slice(0,7);
+const sum=(arr,key)=>arr.reduce((s,r)=>s+num(r[key]||0),0);
+const deepCopy=o=>JSON.parse(JSON.stringify(o));
+
+function getMonthData(m){
+  if(!monthData[m]) monthData[m]={plan:deepCopy(DEFAULT_PLAN),living:[],jiyun:[],woon:[],parking:[]};
+  return monthData[m];
 }
-async function apiPost(body) {
-  const r = await fetch(API,{method:'POST',body:JSON.stringify(body)});
-  return r.json();
+function D(){return getMonthData(currentMonth);}
+
+// ── API ──────────────────────────────────────────────────
+async function apiGet(params){const r=await fetch(API+'?'+new URLSearchParams(params));return r.json();}
+async function apiPost(body){const r=await fetch(API,{method:'POST',body:JSON.stringify(body)});return r.json();}
+
+// ── 저장 키 ──────────────────────────────────────────────
+const KEY={
+  months:'hb_months',
+  plan:m=>`hb_${m}_plan`,
+  living:m=>`hb_${m}_living`,
+  jiyun:m=>`hb_${m}_jiyun`,
+  woon:m=>`hb_${m}_woon`,
+  parking:m=>`hb_${m}_parking`,
+};
+
+// ── 스토리지 (구글시트 대신 localStorage fallback + sheets) ─
+// 구글시트가 월별 키를 지원하도록 sheet명에 월을 포함
+async function saveData(sheetKey, data){
+  try{ await apiPost({action:'saveKey',key:sheetKey,data:JSON.stringify(data)}); }catch(e){}
+  try{ localStorage.setItem(sheetKey,JSON.stringify(data)); }catch(e){}
+}
+async function loadData(sheetKey){
+  try{
+    const r=await apiGet({action:'loadKey',key:sheetKey});
+    if(r.ok&&r.data) return JSON.parse(r.data);
+  }catch(e){}
+  try{ const v=localStorage.getItem(sheetKey); if(v) return JSON.parse(v); }catch(e){}
+  return null;
 }
 
-async function loadAll() {
+// ── 전체 로드 ─────────────────────────────────────────────
+async function loadAll(){
   setSyncStatus('🔄 동기화 중...');
-  try {
-    const res = await apiGet({action:'readAll'});
-    if (!res.ok) throw new Error(res.message);
-    const d = res.data;
-    if (d.plan && d.plan.length>0) {
-      const p = JSON.parse(JSON.stringify(STATE.plan));
-      d.plan.forEach(row => {
-        const sec=row['항목'],key=row['소항목'],val=num(row['금액']);
-        if (p[sec]&&key in p[sec]) p[sec][key]=val;
-      });
-      STATE.plan=p;
-    }
-    STATE.living  = d.living  ||[];
-    STATE.jiyun   = d.jiyun   ||[];
-    STATE.woon    = d.woon    ||[];
-    STATE.parking = d.parking ||[];
+  try{
+    // 월 목록 로드
+    const savedMonths=await loadData(KEY.months);
+    if(savedMonths&&savedMonths.length>0){ months=savedMonths; }
+    else{ months=[thisMonth()]; }
+
+    if(!currentMonth||!months.includes(currentMonth)) currentMonth=months[months.length-1];
+
+    // 현재 월 데이터 로드
+    await loadMonthData(currentMonth);
+
+    renderMonthBar();
     renderAll();
     setSyncStatus('✅ '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+' 동기화됨');
-  } catch(e) { setSyncStatus('⚠️ 연결 오류: '+e.message); }
+  }catch(e){ setSyncStatus('⚠️ 오류: '+e.message); }
   document.getElementById('loading').style.display='none';
 }
 
-function setSyncStatus(msg){ document.getElementById('sync-status').textContent=msg; }
+async function loadMonthData(m){
+  const [plan,living,jiyun,woon,parking]=await Promise.all([
+    loadData(KEY.plan(m)),loadData(KEY.living(m)),
+    loadData(KEY.jiyun(m)),loadData(KEY.woon(m)),loadData(KEY.parking(m))
+  ]);
+  if(!monthData[m]) monthData[m]={plan:deepCopy(DEFAULT_PLAN),living:[],jiyun:[],woon:[],parking:[]};
+  if(plan) monthData[m].plan=plan;
+  if(living) monthData[m].living=living;
+  if(jiyun) monthData[m].jiyun=jiyun;
+  if(woon) monthData[m].woon=woon;
+  if(parking) monthData[m].parking=parking;
+}
 
-function switchTab(id,btn) {
+function setSyncStatus(msg){document.getElementById('sync-status').textContent=msg;}
+
+// ── 월 관리 ──────────────────────────────────────────────
+function renderMonthBar(){
+  const container=document.getElementById('month-btns');
+  container.innerHTML=months.map(m=>`
+    <button class="month-btn ${m===currentMonth?'active':''}" onclick="switchMonth('${m}')">${m.slice(0,4)}년 ${m.slice(5,7)}월</button>
+  `).join('');
+}
+
+async function switchMonth(m){
+  currentMonth=m;
+  if(!monthData[m]){
+    setSyncStatus('🔄 동기화 중...');
+    await loadMonthData(m);
+    setSyncStatus('✅ 로드됨');
+  }
+  renderMonthBar();
+  renderAll();
+}
+
+async function addMonth(){
+  const input=prompt('추가할 월을 입력하세요 (예: 2025-07)');
+  if(!input||!/^\d{4}-\d{2}$/.test(input)){alert('형식이 올바르지 않습니다. 예: 2025-07');return;}
+  if(months.includes(input)){alert('이미 있는 월입니다.');return;}
+
+  // 이전 달 계획 복사
+  const sortedMonths=[...months].sort();
+  const prevMonth=sortedMonths[sortedMonths.length-1];
+  const prevPlan=prevMonth&&monthData[prevMonth]?deepCopy(monthData[prevMonth].plan):deepCopy(DEFAULT_PLAN);
+
+  months.push(input);
+  months.sort();
+  monthData[input]={plan:prevPlan,living:[],jiyun:[],woon:[],parking:[]};
+
+  await saveData(KEY.months,months);
+  await saveData(KEY.plan(input),prevPlan);
+
+  currentMonth=input;
+  renderMonthBar();
+  renderAll();
+  setSyncStatus('✅ '+input+' 월 추가됨');
+}
+
+// ── 탭 전환 ──────────────────────────────────────────────
+function switchTab(id,btn){
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
   btn.classList.add('active');
 }
 
-function renderAll(){ renderSummary(); renderPlan(); renderLiving(); renderJiyun(); renderWoon(); renderParking(); }
+function renderAll(){renderSummary();renderPlan();renderLiving();renderJiyun();renderWoon();renderParking();}
 
-// ── 공통: 지출/지원금 표시 HTML ─────────────────────────
-function spendingInfoHTML(used, support, color) {
-  const real = used - support;
-  return `<div style="margin-top:10px;font-size:12px;display:flex;gap:16px;flex-wrap:wrap">
+// ── 공통 HTML 헬퍼 ───────────────────────────────────────
+function amountCardHTML(label,amount,color,bg,sub=''){
+  return `<div class="amount-card" style="background:${bg};border-left:4px solid ${color}">
+    <div class="label">${label}</div>
+    <div class="value" style="color:${color}">${fmt(amount)}원</div>
+    ${sub?`<div class="sub">${sub}</div>`:''}
+  </div>`;
+}
+
+function progressHTML(used,total,color){
+  const pct=total>0?Math.min(100,Math.round(used/total*100)):0;
+  const bc=pct>90?'var(--red)':pct>70?'var(--yellow)':color;
+  return `<div class="progress-info"><span>${fmt(used)}원 사용</span><span>${pct}%</span></div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${bc}"></div></div>
+    <div class="progress-sub">전체 ${fmt(total)}원 | 잔여 ${fmt(Math.max(0,total-used))}원</div>`;
+}
+
+function spendingInfoHTML(used,support,color){
+  const real=used-support;
+  return `<div class="spending-info">
     <span>실지출 <strong style="color:${color}">${fmt(real)}원</strong></span>
-    <span style="color:var(--sub)">지원금 사용 <strong>${fmt(support)}원</strong></span>
+    <span style="color:var(--sub)">지원금 <strong>${fmt(support)}원</strong></span>
+  </div>`;
+}
+
+function miniProgressHTML(label,used,total,color){
+  const pct=total>0?Math.min(100,Math.round(used/total*100)):0;
+  const bc=pct>90?'var(--red)':pct>70?'var(--yellow)':color;
+  return `<div>
+    <div class="mini-progress-label">
+      <span style="color:var(--sub);font-size:11px">${label}</span>
+      <span style="color:${bc};font-weight:700;font-size:11px">${pct}%</span>
+    </div>
+    <div class="mini-progress-bar"><div class="mini-progress-fill" style="width:${pct}%;background:${bc}"></div></div>
+    <div style="font-size:10px;color:var(--sub);margin-top:2px">${fmt(used)} / ${fmt(total)}원</div>
   </div>`;
 }
 
 // ── 요약 ─────────────────────────────────────────────────
-function renderSummary() {
-  const p = STATE.plan;
-  const totalIncome = num(p.income.woonSalary)+num(p.income.woonBonus)+num(p.income.jiyunSalary)+num(p.income.jiyunBonus);
+function renderSummary(){
+  const d=D(); const p=d.plan;
+  const totalIncome=num(p.income.woonSalary)+num(p.income.woonBonus)+num(p.income.jiyunSalary)+num(p.income.jiyunBonus);
 
-  const livUsed    = sum(STATE.living,'금액');
-  const livPlan    = num(p.living.food)+num(p.living.daily);
-  const livSupport = STATE.living.filter(r=>r['지원금여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
+  const livUsed=sum(d.living,'금액');
+  const livPlan=num(p.living.food)+num(p.living.daily);
+  const livSupport=d.living.filter(r=>r['지원금여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
 
-  const jiPlan    = num(p.housing.rent)+num(p.housing.management)+num(p.housing.water)+num(p.housing.internet)+num(p.transport.eungpass)+num(p.living.food)+num(p.living.daily)+num(p.health.jiyunInsure)+num(p.health.jiyunPilates)+num(p.savings.jiyunJT)+num(p.pocket.jiyun);
-  const jiUsed    = sum(STATE.jiyun,'금액');
-  const jiSupport = STATE.jiyun.filter(r=>r['지원금여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
+  const jiPlan=num(p.housing.rent)+num(p.housing.management)+num(p.housing.water)+num(p.housing.internet)+num(p.transport.eungpass)+num(p.living.food)+num(p.living.daily)+num(p.health.jiyunInsure)+num(p.health.jiyunPilates)+num(p.savings.jiyunJT)+num(p.pocket.jiyun);
+  const jiUsed=sum(d.jiyun,'금액');
+  const jiSupport=d.jiyun.filter(r=>r['지원금여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
 
-  const woPlan    = num(p.transport.gas)+num(p.transport.carInstall)+num(p.transport.carMaint)+num(p.health.woonInsure)+num(p.health.woonSoccer)+num(p.health.woonPilates)+num(p.savings.woonJT)+num(p.pocket.woon);
-  const woUsed    = sum(STATE.woon,'금액');
-  const woSupport = STATE.woon.filter(r=>r['지원금여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
+  const woPlan=num(p.transport.gas)+num(p.transport.carInstall)+num(p.transport.carMaint)+num(p.health.woonInsure)+num(p.health.woonSoccer)+num(p.health.woonPilates)+num(p.savings.woonJT)+num(p.pocket.woon);
+  const woUsed=sum(d.woon,'금액');
+  const woSupport=d.woon.filter(r=>r['지원금여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
 
-  const pkRows = STATE.parking;
-  const pkBal  = pkRows.length>0?num(pkRows[pkRows.length-1]['잔액']):0;
-  const pkIn   = pkRows.reduce((s,r)=>s+num(r['수입']),0);
-  const pkOut  = pkRows.reduce((s,r)=>s+num(r['지출']),0);
+  const pkRows=d.parking;
+  const pkBal=pkRows.length>0?num(pkRows[pkRows.length-1]['잔액']):0;
+  const pkIn=pkRows.reduce((s,r)=>s+num(r['수입']),0);
+  const pkOut=pkRows.reduce((s,r)=>s+num(r['지출']),0);
 
   document.getElementById('summary-top').innerHTML=`
     ${amountCardHTML('이번달 수입',totalIncome,'var(--green)','var(--green-light)')}
     ${amountCardHTML('생활비 전체',livPlan,'var(--accent)','var(--accent-light)')}
     ${amountCardHTML('파킹통장 잔액',pkBal,'var(--yellow)','var(--yellow-light)',`입금 ${fmt(pkIn)}원 / 출금 ${fmt(pkOut)}원`)}
   `;
-
   document.getElementById('summary-cards').innerHTML=`
     <div class="card" style="border-top:3px solid var(--accent)">
       <div class="card-title">🏠 생활비 현황</div>
@@ -387,117 +459,56 @@ function renderSummary() {
     <div class="card" style="border-top:3px solid var(--yellow)">
       <div class="card-title">🏦 파킹통장 현황</div>
       <div class="grid-2" style="margin-bottom:10px">
-        <div style="background:var(--green-light);border-radius:8px;padding:10px 12px;text-align:center"><div style="font-size:11px;color:var(--sub)">총 입금</div><div style="font-weight:700;color:var(--green)">${fmt(pkIn)}원</div></div>
-        <div style="background:var(--red-light);border-radius:8px;padding:10px 12px;text-align:center"><div style="font-size:11px;color:var(--sub)">총 출금</div><div style="font-weight:700;color:var(--red)">${fmt(pkOut)}원</div></div>
+        <div style="background:var(--green-light);border-radius:8px;padding:9px 12px;text-align:center"><div style="font-size:11px;color:var(--sub)">총 입금</div><div style="font-weight:700;color:var(--green)">${fmt(pkIn)}원</div></div>
+        <div style="background:var(--red-light);border-radius:8px;padding:9px 12px;text-align:center"><div style="font-size:11px;color:var(--sub)">총 출금</div><div style="font-weight:700;color:var(--red)">${fmt(pkOut)}원</div></div>
       </div>
       <div style="text-align:center;font-weight:800;font-size:18px;color:var(--yellow)">잔액 ${fmt(pkBal)}원</div>
     </div>
   `;
 }
 
-function amountCardHTML(label,amount,color,bg,sub='') {
-  return `<div class="amount-card" style="background:${bg};border-left:4px solid ${color}">
-    <div class="label">${label}</div>
-    <div class="value" style="color:${color}">${fmt(amount)}원</div>
-    ${sub?`<div class="sub">${sub}</div>`:''}
-  </div>`;
-}
-
-function progressHTML(used,total,color) {
-  const pct = total>0?Math.min(100,Math.round(used/total*100)):0;
-  const barColor = pct>90?'var(--red)':pct>70?'var(--yellow)':color;
-  return `
-    <div class="progress-info"><span>${fmt(used)}원 사용</span><span>${pct}%</span></div>
-    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${barColor}"></div></div>
-    <div class="progress-sub">전체 ${fmt(total)}원 | 잔여 ${fmt(Math.max(0,total-used))}원</div>
-  `;
-}
-
-function miniProgressHTML(label, used, total, color) {
-  const pct = total>0?Math.min(100,Math.round(used/total*100)):0;
-  const barColor = pct>90?'var(--red)':pct>70?'var(--yellow)':color;
-  return `<div class="mini-progress">
-    <div class="mini-progress-label">
-      <span style="color:var(--sub)">${label}</span>
-      <span style="color:${barColor};font-weight:700">${fmt(used)}원 / ${fmt(total)}원 (${pct}%)</span>
-    </div>
-    <div class="mini-progress-bar"><div class="mini-progress-fill" style="width:${pct}%;background:${barColor}"></div></div>
-  </div>`;
-}
-
 // ── 계획 ─────────────────────────────────────────────────
-function renderPlan() {
-  const p = STATE.plan;
-  const totalIncome = num(p.income.woonSalary)+num(p.income.woonBonus)+num(p.income.jiyunSalary)+num(p.income.jiyunBonus);
-  const housingSum  = Object.values(p.housing).reduce((s,v)=>s+num(v),0);
-  const transSum    = Object.values(p.transport).reduce((s,v)=>s+num(v),0);
-  const livingSum   = Object.values(p.living).reduce((s,v)=>s+num(v),0);
-  const healthSum   = Object.values(p.health).reduce((s,v)=>s+num(v),0);
-  const savingsSum  = Object.values(p.savings).reduce((s,v)=>s+num(v),0);
-  const pocketSum   = Object.values(p.pocket).reduce((s,v)=>s+num(v),0);
-  const totalExp    = housingSum+transSum+livingSum+healthSum+savingsSum+pocketSum;
-  const leftover    = totalIncome-totalExp;
+function renderPlan(){
+  const p=D().plan;
+  const totalIncome=num(p.income.woonSalary)+num(p.income.woonBonus)+num(p.income.jiyunSalary)+num(p.income.jiyunBonus);
+  const housingSum=Object.values(p.housing).reduce((s,v)=>s+num(v),0);
+  const transSum=Object.values(p.transport).reduce((s,v)=>s+num(v),0);
+  const livingSum=Object.values(p.living).reduce((s,v)=>s+num(v),0);
+  const healthSum=Object.values(p.health).reduce((s,v)=>s+num(v),0);
+  const savingsSum=Object.values(p.savings).reduce((s,v)=>s+num(v),0);
+  const pocketSum=Object.values(p.pocket).reduce((s,v)=>s+num(v),0);
+  const totalExp=housingSum+transSum+livingSum+healthSum+savingsSum+pocketSum;
+  const leftover=totalIncome-totalExp;
 
-  // 지윤 지출
-  const jiyunExp = num(p.housing.rent)+num(p.housing.management)+num(p.housing.water)+num(p.housing.internet)
-    +num(p.transport.eungpass)+num(p.living.food)+num(p.living.daily)
-    +num(p.health.jiyunInsure)+num(p.health.jiyunPilates)+num(p.savings.jiyunJT)+num(p.pocket.jiyun);
-  const jiyunIncome = num(p.income.jiyunSalary)+num(p.income.jiyunBonus);
-  const jiyunToParking = jiyunIncome - jiyunExp;
+  const jiyunExp=num(p.housing.rent)+num(p.housing.management)+num(p.housing.water)+num(p.housing.internet)+num(p.transport.eungpass)+num(p.living.food)+num(p.living.daily)+num(p.health.jiyunInsure)+num(p.health.jiyunPilates)+num(p.savings.jiyunJT)+num(p.pocket.jiyun);
+  const jiyunIncome=num(p.income.jiyunSalary)+num(p.income.jiyunBonus);
+  const jiyunToParking=jiyunIncome-jiyunExp;
 
-  // 운혁 지출
-  const woonExp = num(p.transport.gas)+num(p.transport.carInstall)+num(p.transport.carMaint)
-    +num(p.transport.carInsure)+num(p.transport.carTax)+num(p.transport.carRepair)
-    +num(p.health.woonInsure)+num(p.health.woonSoccer)+num(p.health.woonPilates)
-    +num(p.savings.woonJT)+num(p.pocket.woon);
-  const woonIncome = num(p.income.woonSalary)+num(p.income.woonBonus);
-  const woonToParking = woonIncome - woonExp;
+  const woonExp=num(p.transport.gas)+num(p.transport.carInstall)+num(p.transport.carMaint)+num(p.transport.carInsure)+num(p.transport.carTax)+num(p.transport.carRepair)+num(p.health.woonInsure)+num(p.health.woonSoccer)+num(p.health.woonPilates)+num(p.savings.woonJT)+num(p.pocket.woon);
+  const woonIncome=num(p.income.woonSalary)+num(p.income.woonBonus);
+  const woonToParking=woonIncome-woonExp;
 
   document.getElementById('plan-content').innerHTML=`
-    ${planSection('📥 수입',totalIncome,'var(--green)',[
-      planRow('income','woonSalary','운혁 급여'),planRow('income','woonBonus','운혁 인센티브'),
-      planRow('income','jiyunSalary','지윤 급여'),planRow('income','jiyunBonus','지윤 인센티브'),
-    ],true)}
-    ${planSection('🏠 주거비',housingSum,'',[
-      planRow('housing','rent','임대료'),planRow('housing','management','관리비'),
-      planRow('housing','water','정수기'),planRow('housing','internet','인터넷'),
-    ])}
-    ${planSection('🚗 교통비',transSum,'',[
-      planRow('transport','gas','기름값'),planRow('transport','carInstall','차 할부금'),
-      planRow('transport','carMaint','차 유지비'),planRow('transport','carInsure','차 보험료'),
-      planRow('transport','carTax','차 세금'),planRow('transport','carRepair','차 수리비'),
-      planRow('transport','eungpass','이응패스'),
-    ])}
-    ${planSection('🍚 식비 및 생활비',livingSum,'',[
-      planRow('living','food','식생활비'),planRow('living','daily','생필품'),
-    ])}
-    ${planSection('💊 건강 및 보험료',healthSum,'',[
-      planRow('health','woonInsure','운혁 보험'),planRow('health','jiyunInsure','지윤 보험'),
-      planRow('health','woonSoccer','운혁 축구'),planRow('health','woonPilates','운혁 필라테스'),
-      planRow('health','jiyunPilates','지윤 필라테스'),
-    ])}
-    ${planSection('💰 저축',savingsSum,'',[
-      planRow('savings','woonJT','운혁 주택청약'),planRow('savings','jiyunJT','지윤 주택청약'),
-    ])}
-    ${planSection('💳 용돈',pocketSum,'',[
-      planRow('pocket','woon','운혁'),planRow('pocket','jiyun','지윤'),
-    ])}
-
+    ${planSection('📥 수입',totalIncome,'var(--green)',[planRow('income','woonSalary','운혁 급여'),planRow('income','woonBonus','운혁 인센티브'),planRow('income','jiyunSalary','지윤 급여'),planRow('income','jiyunBonus','지윤 인센티브')],true)}
+    ${planSection('🏠 주거비',housingSum,'',[planRow('housing','rent','임대료'),planRow('housing','management','관리비'),planRow('housing','water','정수기'),planRow('housing','internet','인터넷')])}
+    ${planSection('🚗 교통비',transSum,'',[planRow('transport','gas','기름값'),planRow('transport','carInstall','차 할부금'),planRow('transport','carMaint','차 유지비'),planRow('transport','carInsure','차 보험료'),planRow('transport','carTax','차 세금'),planRow('transport','carRepair','차 수리비'),planRow('transport','eungpass','이응패스')])}
+    ${planSection('🍚 식비 및 생활비',livingSum,'',[planRow('living','food','식생활비'),planRow('living','daily','생필품')])}
+    ${planSection('💊 건강 및 보험료',healthSum,'',[planRow('health','woonInsure','운혁 보험'),planRow('health','jiyunInsure','지윤 보험'),planRow('health','woonSoccer','운혁 축구'),planRow('health','woonPilates','운혁 필라테스'),planRow('health','jiyunPilates','지윤 필라테스')])}
+    ${planSection('💰 저축',savingsSum,'',[planRow('savings','woonJT','운혁 주택청약'),planRow('savings','jiyunJT','지윤 주택청약')])}
+    ${planSection('💳 용돈',pocketSum,'',[planRow('pocket','woon','운혁'),planRow('pocket','jiyun','지윤')])}
     <div class="card">
       <div class="card-title">📊 이번달 결산</div>
       <div class="result-row"><span>총 수입</span><span style="color:var(--green);font-weight:700">${fmt(totalIncome)}원</span></div>
       <div class="result-row"><span>총 지출</span><span style="color:var(--red);font-weight:700">${fmt(totalExp)}원</span></div>
-      <div class="result-row total"><span>파킹통장으로 이동 (저축)</span><span style="color:${leftover<0?'var(--red)':'var(--yellow)'};font-weight:800">${fmt(leftover)}원</span></div>
-
-      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
-        <div style="font-weight:700;font-size:13px;margin-bottom:12px;color:var(--sub)">👩 지윤 세부 내역</div>
+      <div class="result-row bold"><span>파킹통장으로 이동 (저축)</span><span style="color:${leftover<0?'var(--red)':'var(--yellow)'};font-weight:800">${fmt(leftover)}원</span></div>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+        <div style="font-weight:700;font-size:13px;margin-bottom:10px;color:var(--sub)">💗 지윤 세부 내역</div>
         <div class="result-row" style="font-size:13px"><span style="color:var(--sub)">지윤 수입</span><span style="color:var(--green)">${fmt(jiyunIncome)}원</span></div>
         <div class="result-row" style="font-size:13px"><span style="color:var(--sub)">지윤 지출</span><span style="color:var(--red)">${fmt(jiyunExp)}원</span></div>
         <div class="result-row" style="font-size:13px;font-weight:700"><span style="color:var(--jiyun)">지윤 → 파킹통장 송금액</span><span style="color:${jiyunToParking<0?'var(--red)':'var(--jiyun)'}">${fmt(jiyunToParking)}원</span></div>
       </div>
-
-      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
-        <div style="font-weight:700;font-size:13px;margin-bottom:12px;color:var(--sub)">👨 운혁 세부 내역</div>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+        <div style="font-weight:700;font-size:13px;margin-bottom:10px;color:var(--sub)">💙 운혁 세부 내역</div>
         <div class="result-row" style="font-size:13px"><span style="color:var(--sub)">운혁 수입</span><span style="color:var(--green)">${fmt(woonIncome)}원</span></div>
         <div class="result-row" style="font-size:13px"><span style="color:var(--sub)">운혁 지출</span><span style="color:var(--red)">${fmt(woonExp)}원</span></div>
         <div class="result-row" style="font-size:13px;font-weight:700"><span style="color:var(--woon)">운혁 → 파킹통장 송금액</span><span style="color:${woonToParking<0?'var(--red)':'var(--woon)'}">${fmt(woonToParking)}원</span></div>
@@ -506,211 +517,186 @@ function renderPlan() {
   `;
 }
 
-function planSection(title,total,color,rows,isIncome=false) {
+function planSection(title,total,color,rows,isIncome=false){
   return `<div class="card">
-    <div class="section-header">
-      <span class="s-title">${title}</span>
-      <span class="s-total" style="color:${color||'var(--accent)'}">${fmt(total)}원</span>
-    </div>
-    <div style="display:grid;grid-template-columns:${isIncome?'1fr 1fr':'1fr'};gap:0 16px">
-      ${rows.join('')}
-    </div>
+    <div class="section-header"><span class="s-title">${title}</span><span class="s-total" style="color:${color||'var(--accent)'}">${fmt(total)}원</span></div>
+    <div style="display:grid;grid-template-columns:${isIncome?'1fr 1fr':'1fr'};gap:0 16px">${rows.join('')}</div>
   </div>`;
 }
-
-function planRow(sec,key,label) {
-  const val = STATE.plan[sec][key]||'';
-  return `<div class="plan-row">
-    <span>${label}</span>
-    <div class="amount-wrap">
-      <input type="number" value="${val}" placeholder="0" oninput="updatePlan('${sec}','${key}',this.value)" />
-      <span class="won">원</span>
-    </div>
-  </div>`;
+function planRow(sec,key,label){
+  const val=D().plan[sec][key]||'';
+  return `<div class="plan-row"><span>${label}</span><div class="aw"><input type="number" value="${val}" placeholder="0" oninput="updatePlan('${sec}','${key}',this.value)"/><span class="won">원</span></div></div>`;
 }
-
-function updatePlan(sec,key,val) {
-  STATE.plan[sec][key]=num(val);
+function updatePlan(sec,key,val){
+  D().plan[sec][key]=num(val);
   clearTimeout(planSaveTimer);
   planSaveTimer=setTimeout(async()=>{
     setSyncStatus('☁️ 저장 중...');
-    await apiPost({action:'savePlan',rows:STATE.plan});
+    await saveData(KEY.plan(currentMonth),D().plan);
     setSyncStatus('✅ 저장됨');
-    renderSummary(); renderPlan();
+    renderSummary();renderPlan();
   },800);
 }
 
-// ── 생활비 ────────────────────────────────────────────────
-function renderLiving() {
-  const rows=[...STATE.living].reverse();
-  const total=sum(STATE.living,'금액');
-  document.getElementById('liv-count').textContent=`생활비 내역 (${STATE.living.length}건)`;
+// ── 생활비 ───────────────────────────────────────────────
+function renderLiving(){
+  const rows=[...D().living].reverse();
+  const total=sum(D().living,'금액');
+  document.getElementById('liv-count').textContent=`생활비 내역 (${D().living.length}건)`;
   document.getElementById('liv-total').textContent=`합계 ${fmt(total)}원`;
   const tbody=document.getElementById('liv-body');
   if(!rows.length){tbody.innerHTML=`<tr><td colspan="8" class="empty">기록이 없습니다.</td></tr>`;return;}
   tbody.innerHTML=rows.map(r=>{
     const isWoon=r['지불자']==='운';
-    return `<tr>
-      <td>${r['날짜']}</td><td>${r['내용']}</td>
-      <td>${fmt(r['금액'])}원</td>
+    return `<tr><td>${r['날짜']}</td><td>${r['내용']}</td><td>${fmt(r['금액'])}원</td>
       <td><span class="badge ${isWoon?'badge-woon':'badge-jiyun'}">${r['지불자']}</span></td>
       <td>${r['구분']}</td>
       <td style="color:${r['지원금여부']==='O'?'var(--green)':'var(--sub)'}">${r['지원금여부']}</td>
       <td>${r['비고']||''}</td>
-      <td><button class="del-btn" onclick="deleteLiving('${r['id']}')">삭제</button></td>
-    </tr>`;
+      <td><button class="del-btn" onclick="deleteLiving('${r['id']}')">삭제</button></td></tr>`;
   }).join('');
 }
-
-async function addLiving() {
+async function addLiving(){
   const desc=document.getElementById('liv-desc').value.trim();
   const amount=document.getElementById('liv-amount').value;
   if(!desc||!amount){alert('내용과 금액을 입력해주세요.');return;}
   const row={id:Date.now(),날짜:document.getElementById('liv-date').value,내용:desc,금액:num(amount),지불자:document.getElementById('liv-payer').value,구분:document.getElementById('liv-cat').value,지원금여부:document.getElementById('liv-support').value,비고:document.getElementById('liv-note').value};
-  setSyncStatus('☁️ 저장 중...');
-  await apiPost({action:'append',sheet:'생활비',row});
-  STATE.living.push(row);
+  D().living.push(row);
+  await saveData(KEY.living(currentMonth),D().living);
   document.getElementById('liv-desc').value='';document.getElementById('liv-amount').value='';document.getElementById('liv-note').value='';
   renderLiving();renderSummary();setSyncStatus('✅ 저장됨');
 }
-
-async function deleteLiving(id) {
+async function deleteLiving(id){
   if(!confirm('삭제할까요?'))return;
-  setSyncStatus('☁️ 저장 중...');
-  await apiPost({action:'delete',sheet:'생활비',id});
-  STATE.living=STATE.living.filter(r=>String(r['id'])!==String(id));
+  getMonthData(currentMonth).living=D().living.filter(r=>String(r['id'])!==String(id));
+  await saveData(KEY.living(currentMonth),D().living);
   renderLiving();renderSummary();setSyncStatus('✅ 저장됨');
 }
 
-// ── 지윤소비 ──────────────────────────────────────────────
+// ── 지윤소비 ─────────────────────────────────────────────
 const JIYUN_FIXED=['임대료','관리비','정수기','인터넷','교통','보험','필라테스','주택청약'];
-const JIYUN_VAR  =['핸드폰','구독료','선물','식비','카페','생필품','공부','미용','기타','필수지출'];
+const JIYUN_VAR=['핸드폰','구독료','선물','식비','카페','생필품','공부','미용','기타','필수지출'];
 
-function updateJiyunCats() {
+function updateJiyunCats(){
   const fixed=document.getElementById('ji-fixed').value==='O';
-  const cats=fixed?JIYUN_FIXED:JIYUN_VAR;
-  document.getElementById('ji-cat').innerHTML=cats.map(c=>`<option>${c}</option>`).join('');
+  document.getElementById('ji-cat').innerHTML=(fixed?JIYUN_FIXED:JIYUN_VAR).map(c=>`<option>${c}</option>`).join('');
 }
 
-function renderJiyun() {
-  const p=STATE.plan;
+function renderJiyun(){
+  const d=D();const p=d.plan;
   const jiPlan=num(p.housing.rent)+num(p.housing.management)+num(p.housing.water)+num(p.housing.internet)+num(p.transport.eungpass)+num(p.living.food)+num(p.living.daily)+num(p.health.jiyunInsure)+num(p.health.jiyunPilates)+num(p.savings.jiyunJT)+num(p.pocket.jiyun);
-  const jiUsed   =sum(STATE.jiyun,'금액');
-  const jiSupport=STATE.jiyun.filter(r=>r['지원금여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
-
-  // 용돈 vs 필수지출 분리
-  const pocketUsed=STATE.jiyun.filter(r=>r['세부구분']==='용돈'||r['구분']==='용돈').reduce((s,r)=>s+num(r['금액']),0);
-  const essentialUsed=STATE.jiyun.filter(r=>r['세부구분']==='필수지출').reduce((s,r)=>s+num(r['금액']),0);
-  const jiEssentialBudget=jiPlan-POCKET_LIMIT;
+  const jiUsed=sum(d.jiyun,'금액');
+  const jiSupport=d.jiyun.filter(r=>r['지원금여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
+  // O=필수지출, X=용돈
+  const essentialUsed=d.jiyun.filter(r=>r['필수지출여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
+  const pocketUsed=d.jiyun.filter(r=>r['필수지출여부']==='X').reduce((s,r)=>s+num(r['금액']),0);
+  const jiEssentialBudget=Math.max(jiPlan-POCKET_LIMIT,0);
 
   document.getElementById('jiyun-progress-card').innerHTML=`
     ${progressHTML(jiUsed,jiPlan,'var(--jiyun)')}
     ${spendingInfoHTML(jiUsed,jiSupport,'var(--jiyun)')}
-    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
-      <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">세부 달성률</div>
-      ${miniProgressHTML('💳 용돈',pocketUsed,POCKET_LIMIT,'var(--jiyun)')}
-      <div style="margin-top:6px"></div>
+    <div class="mini-grid">
+      <div style="font-size:12px;font-weight:700;color:var(--sub);grid-column:1/-1;margin-bottom:-4px">세부 달성률</div>
       ${miniProgressHTML('📌 필수지출',essentialUsed,Math.max(jiEssentialBudget,1),'var(--accent)')}
+      ${miniProgressHTML('💳 용돈',pocketUsed,POCKET_LIMIT,'var(--jiyun)')}
     </div>
   `;
 
-  const rows=[...STATE.jiyun].reverse();
-  document.getElementById('ji-count').textContent=`지윤 소비 내역 (${STATE.jiyun.length}건)`;
+  const rows=[...d.jiyun].reverse();
+  document.getElementById('ji-count').textContent=`지윤 소비 내역 (${d.jiyun.length}건)`;
   document.getElementById('ji-total').textContent=`합계 ${fmt(jiUsed)}원`;
   const tbody=document.getElementById('ji-body');
   if(!rows.length){tbody.innerHTML=`<tr><td colspan="8" class="empty">기록이 없습니다.</td></tr>`;return;}
   tbody.innerHTML=rows.map(r=>`<tr>
-    <td>${r['날짜']}</td><td>${r['내용']}</td>
-    <td>${fmt(r['금액'])}원</td>
-    <td style="color:${r['고정지출']==='O'?'var(--jiyun)':'var(--sub)'}">${r['고정지출']}</td>
+    <td>${r['날짜']}</td><td>${r['내용']}</td><td>${fmt(r['금액'])}원</td>
+    <td style="color:${r['필수지출여부']==='O'?'var(--jiyun)':'var(--sub)'}">${r['필수지출여부']}</td>
     <td>${r['세부구분']}</td>
     <td style="color:${r['지원금여부']==='O'?'var(--green)':'var(--sub)'}">${r['지원금여부']}</td>
     <td>${r['비고']||''}</td>
     <td><button class="del-btn" onclick="deleteJiyun('${r['id']}')">삭제</button></td>
   </tr>`).join('');
 }
-
-async function addJiyun() {
+async function addJiyun(){
   const desc=document.getElementById('ji-desc').value.trim();
   const amount=document.getElementById('ji-amount').value;
   if(!desc||!amount){alert('내용과 금액을 입력해주세요.');return;}
-  const row={id:Date.now(),날짜:document.getElementById('ji-date').value,내용:desc,금액:num(amount),고정지출:document.getElementById('ji-fixed').value,세부구분:document.getElementById('ji-cat').value,지원금여부:document.getElementById('ji-support').value,비고:document.getElementById('ji-note').value};
-  setSyncStatus('☁️ 저장 중...');
-  await apiPost({action:'append',sheet:'지윤소비',row});
-  STATE.jiyun.push(row);
+  const row={id:Date.now(),날짜:document.getElementById('ji-date').value,내용:desc,금액:num(amount),필수지출여부:document.getElementById('ji-fixed').value,세부구분:document.getElementById('ji-cat').value,지원금여부:document.getElementById('ji-support').value,비고:document.getElementById('ji-note').value};
+  D().jiyun.push(row);
+  await saveData(KEY.jiyun(currentMonth),D().jiyun);
   document.getElementById('ji-desc').value='';document.getElementById('ji-amount').value='';document.getElementById('ji-note').value='';
   renderJiyun();renderSummary();setSyncStatus('✅ 저장됨');
 }
-
-async function deleteJiyun(id) {
+async function deleteJiyun(id){
   if(!confirm('삭제할까요?'))return;
-  setSyncStatus('☁️ 저장 중...');
-  await apiPost({action:'delete',sheet:'지윤소비',id});
-  STATE.jiyun=STATE.jiyun.filter(r=>String(r['id'])!==String(id));
+  getMonthData(currentMonth).jiyun=D().jiyun.filter(r=>String(r['id'])!==String(id));
+  await saveData(KEY.jiyun(currentMonth),D().jiyun);
   renderJiyun();renderSummary();setSyncStatus('✅ 저장됨');
 }
 
-// ── 운혁소비 ──────────────────────────────────────────────
-function renderWoon() {
-  const p=STATE.plan;
-  const woPlan=num(p.transport.gas)+num(p.transport.carInstall)+num(p.transport.carMaint)+num(p.health.woonInsure)+num(p.health.woonSoccer)+num(p.health.woonPilates)+num(p.savings.woonJT)+num(p.pocket.woon);
-  const woUsed   =sum(STATE.woon,'금액');
-  const woSupport=STATE.woon.filter(r=>r['지원금여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
+// ── 운혁소비 ─────────────────────────────────────────────
+const WOON_FIXED=['기름값','차 할부금','차 유지비','보험','축구','필라테스','주택청약'];
+const WOON_VAR=['핸드폰','구독료','선물','식비','카페','생필품','공부','미용','기타','필수지출'];
 
-  const pocketUsed  =STATE.woon.filter(r=>r['구분']==='용돈').reduce((s,r)=>s+num(r['금액']),0);
-  const essentialUsed=STATE.woon.filter(r=>r['구분']==='필수지출').reduce((s,r)=>s+num(r['금액']),0);
-  const woEssentialBudget=woPlan-POCKET_LIMIT;
+function updateWoonCats(){
+  const fixed=document.getElementById('wo-fixed').value==='O';
+  document.getElementById('wo-cat').innerHTML=(fixed?WOON_FIXED:WOON_VAR).map(c=>`<option>${c}</option>`).join('');
+}
+
+function renderWoon(){
+  const d=D();const p=d.plan;
+  const woPlan=num(p.transport.gas)+num(p.transport.carInstall)+num(p.transport.carMaint)+num(p.health.woonInsure)+num(p.health.woonSoccer)+num(p.health.woonPilates)+num(p.savings.woonJT)+num(p.pocket.woon);
+  const woUsed=sum(d.woon,'금액');
+  const woSupport=d.woon.filter(r=>r['지원금여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
+  const essentialUsed=d.woon.filter(r=>r['필수지출여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
+  const pocketUsed=d.woon.filter(r=>r['필수지출여부']==='X').reduce((s,r)=>s+num(r['금액']),0);
+  const woEssentialBudget=Math.max(woPlan-POCKET_LIMIT,0);
 
   document.getElementById('woon-progress-card').innerHTML=`
     ${progressHTML(woUsed,woPlan,'var(--woon)')}
     ${spendingInfoHTML(woUsed,woSupport,'var(--woon)')}
-    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
-      <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">세부 달성률</div>
-      ${miniProgressHTML('💳 용돈',pocketUsed,POCKET_LIMIT,'var(--woon)')}
-      <div style="margin-top:6px"></div>
+    <div class="mini-grid">
+      <div style="font-size:12px;font-weight:700;color:var(--sub);grid-column:1/-1;margin-bottom:-4px">세부 달성률</div>
       ${miniProgressHTML('📌 필수지출',essentialUsed,Math.max(woEssentialBudget,1),'var(--accent)')}
+      ${miniProgressHTML('💳 용돈',pocketUsed,POCKET_LIMIT,'var(--woon)')}
     </div>
   `;
 
-  const rows=[...STATE.woon].reverse();
-  document.getElementById('wo-count').textContent=`운혁 소비 내역 (${STATE.woon.length}건)`;
+  const rows=[...d.woon].reverse();
+  document.getElementById('wo-count').textContent=`운혁 소비 내역 (${d.woon.length}건)`;
   document.getElementById('wo-total').textContent=`합계 ${fmt(woUsed)}원`;
   const tbody=document.getElementById('wo-body');
   if(!rows.length){tbody.innerHTML=`<tr><td colspan="7" class="empty">기록이 없습니다.</td></tr>`;return;}
   tbody.innerHTML=rows.map(r=>`<tr>
-    <td>${r['날짜']}</td><td>${r['내용']}</td>
-    <td>${fmt(r['금액'])}원</td><td>${r['구분']}</td>
+    <td>${r['날짜']}</td><td>${r['내용']}</td><td>${fmt(r['금액'])}원</td>
+    <td style="color:${r['필수지출여부']==='O'?'var(--woon)':'var(--sub)'}">${r['필수지출여부']}</td>
+    <td>${r['세부구분']}</td>
     <td style="color:${r['지원금여부']==='O'?'var(--green)':'var(--sub)'}">${r['지원금여부']}</td>
     <td>${r['비고']||''}</td>
     <td><button class="del-btn" onclick="deleteWoon('${r['id']}')">삭제</button></td>
   </tr>`).join('');
 }
-
-async function addWoon() {
+async function addWoon(){
   const desc=document.getElementById('wo-desc').value.trim();
   const amount=document.getElementById('wo-amount').value;
   if(!desc||!amount){alert('내용과 금액을 입력해주세요.');return;}
-  const row={id:Date.now(),날짜:document.getElementById('wo-date').value,내용:desc,금액:num(amount),구분:document.getElementById('wo-cat').value,지원금여부:document.getElementById('wo-support').value,비고:document.getElementById('wo-note').value};
-  setSyncStatus('☁️ 저장 중...');
-  await apiPost({action:'append',sheet:'운혁소비',row});
-  STATE.woon.push(row);
+  const row={id:Date.now(),날짜:document.getElementById('wo-date').value,내용:desc,금액:num(amount),필수지출여부:document.getElementById('wo-fixed').value,세부구분:document.getElementById('wo-cat').value,지원금여부:document.getElementById('wo-support').value,비고:document.getElementById('wo-note').value};
+  D().woon.push(row);
+  await saveData(KEY.woon(currentMonth),D().woon);
   document.getElementById('wo-desc').value='';document.getElementById('wo-amount').value='';document.getElementById('wo-note').value='';
   renderWoon();renderSummary();setSyncStatus('✅ 저장됨');
 }
-
-async function deleteWoon(id) {
+async function deleteWoon(id){
   if(!confirm('삭제할까요?'))return;
-  setSyncStatus('☁️ 저장 중...');
-  await apiPost({action:'delete',sheet:'운혁소비',id});
-  STATE.woon=STATE.woon.filter(r=>String(r['id'])!==String(id));
+  getMonthData(currentMonth).woon=D().woon.filter(r=>String(r['id'])!==String(id));
+  await saveData(KEY.woon(currentMonth),D().woon);
   renderWoon();renderSummary();setSyncStatus('✅ 저장됨');
 }
 
 // ── 파킹통장 ─────────────────────────────────────────────
-function renderParking() {
-  const rows=STATE.parking;
+function renderParking(){
+  const rows=D().parking;
   const pkBal=rows.length>0?num(rows[rows.length-1]['잔액']):0;
-  const pkIn =rows.reduce((s,r)=>s+num(r['수입']),0);
+  const pkIn=rows.reduce((s,r)=>s+num(r['수입']),0);
   const pkOut=rows.reduce((s,r)=>s+num(r['지출']),0);
   document.getElementById('parking-top').innerHTML=`
     ${amountCardHTML('현재 잔액',pkBal,'var(--yellow)','var(--yellow-light)')}
@@ -735,38 +721,36 @@ function renderParking() {
     </tr>`;
   }).join('');
 }
-
-async function addParking() {
+async function addParking(){
   const desc=document.getElementById('pk-desc').value.trim();
   if(!desc){alert('내용을 입력해주세요.');return;}
-  const income =num(document.getElementById('pk-income').value);
+  const income=num(document.getElementById('pk-income').value);
   const expense=num(document.getElementById('pk-expense').value);
-  const prevBal=STATE.parking.length>0?num(STATE.parking[STATE.parking.length-1]['잔액']):0;
-  const newBal =prevBal+income-expense;
-  const row={id:Date.now(),날짜:document.getElementById('pk-date').value,사람:document.getElementById('pk-person').value,내용:desc,수입:income||'',지출:expense||'',잔액:newBal};
-  setSyncStatus('☁️ 저장 중...');
-  await apiPost({action:'append',sheet:'파킹통장',row});
-  STATE.parking.push(row);
+  const prevBal=D().parking.length>0?num(D().parking[D().parking.length-1]['잔액']):0;
+  const row={id:Date.now(),날짜:document.getElementById('pk-date').value,사람:document.getElementById('pk-person').value,내용:desc,수입:income||'',지출:expense||'',잔액:prevBal+income-expense};
+  D().parking.push(row);
+  await saveData(KEY.parking(currentMonth),D().parking);
   document.getElementById('pk-desc').value='';document.getElementById('pk-income').value='';document.getElementById('pk-expense').value='';
   renderParking();renderSummary();setSyncStatus('✅ 저장됨');
 }
-
-async function deleteParking(id) {
+async function deleteParking(id){
   if(!confirm('삭제할까요?'))return;
-  setSyncStatus('☁️ 저장 중...');
-  STATE.parking=STATE.parking.filter(r=>String(r['id'])!==String(id));
   let bal=0;
-  STATE.parking=STATE.parking.map(r=>{bal=bal+num(r['수입'])-num(r['지출']);return{...r,잔액:bal};});
-  await apiPost({action:'updateParking',sheet:'파킹통장',rows:STATE.parking});
+  getMonthData(currentMonth).parking=D().parking.filter(r=>String(r['id'])!==String(id)).map(r=>{bal=bal+num(r['수입'])-num(r['지출']);return{...r,잔액:bal};});
+  await saveData(KEY.parking(currentMonth),D().parking);
   renderParking();renderSummary();setSyncStatus('✅ 저장됨');
 }
 
+// ── Apps Script 키-값 저장 지원을 위해 백엔드 업데이트 필요 ─
+// 로컬스토리지 우선 사용 (공유는 새로고침으로 동기화)
+
 // ── 초기화 ───────────────────────────────────────────────
 document.getElementById('liv-date').value=today();
-document.getElementById('ji-date').value =today();
-document.getElementById('wo-date').value =today();
-document.getElementById('pk-date').value =today();
+document.getElementById('ji-date').value=today();
+document.getElementById('wo-date').value=today();
+document.getElementById('pk-date').value=today();
 updateJiyunCats();
+updateWoonCats();
 loadAll();
 setInterval(loadAll,30000);
 </script>
