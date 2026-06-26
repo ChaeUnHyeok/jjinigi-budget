@@ -555,7 +555,7 @@ function renderPlan(){
 
   const ti=num(inc.woonSalary)+num(inc.woonBonus)+num(inc.jiyunSalary)+num(inc.jiyunBonus);
   const housingSum=Object.values(hou).reduce((s,v)=>s+num(v),0);
-  const transSum=Object.values(tra).reduce((s,v)=>s+num(v),0);
+  const transSum=num(tra.gas)+num(tra.carInstall)+num(tra.carMaint)+num(tra.eungpass);
   const livingSum=Object.values(liv).reduce((s,v)=>s+num(v),0);
   const healthSum=Object.values(hea).reduce((s,v)=>s+num(v),0);
   const savingsSum=Object.values(sav).reduce((s,v)=>s+num(v),0);
@@ -568,7 +568,7 @@ function renderPlan(){
   const jiExp=num(hou.rent)+num(hou.management)+num(hou.water)+num(hou.internet)+num(tra.eungpass)+num(liv.food)+num(liv.daily)+num(hea.jiyunInsure)+num(hea.jiyunPilates)+num(sav.jiyunJT)+num(poc.jiyun);
   const jiInc=num(inc.jiyunSalary)+num(inc.jiyunBonus);
   const jiPark=jiInc-jiExp;
-  const woExp=num(tra.gas)+num(tra.carInstall)+num(tra.carMaint)+num(tra.carInsure)+num(tra.carTax)+num(tra.carRepair)+num(hea.woonInsure)+num(hea.woonSoccer)+num(hea.woonPilates)+num(sav.woonJT)+num(poc.woon);
+  const woExp=num(tra.gas)+num(tra.carInstall)+num(tra.carMaint)+num(hea.woonInsure)+num(hea.woonSoccer)+num(hea.woonPilates)+num(sav.woonJT)+num(poc.woon);
   const woInc=num(inc.woonSalary)+num(inc.woonBonus);
   const woPark=woInc-woExp;
 
@@ -577,7 +577,7 @@ function renderPlan(){
   document.getElementById('plan-content').innerHTML=`
     ${PS('📥 수입',ti,'var(--green)',[PR('income','woonSalary','운혁 급여',true),PR('income','woonBonus','운혁 인센티브',true),PR('income','jiyunSalary','지윤 급여',true),PR('income','jiyunBonus','지윤 인센티브',true)],true)}
     ${PS('🏠 주거비',housingSum,'',[PR('housing','rent','임대료'),PR('housing','management','관리비'),PR('housing','water','정수기'),PR('housing','internet','인터넷')])}
-    ${PS('🚗 교통비',transSum,'',[PR('transport','gas','기름값'),PR('transport','carInstall','차 할부금'),PR('transport','carMaint','차 유지비'),PR('transport','carInsure','차 보험료'),PR('transport','carTax','차 세금'),PR('transport','carRepair','차 수리비'),PR('transport','eungpass','이응패스')])}
+    ${PS('🚗 교통비',transSum,'',[PR('transport','gas','기름값'),PR('transport','carInstall','차 할부금'),PR('transport','carMaint','차 유지비'),PR('transport','eungpass','이응패스')])}
     ${PS('🍚 식비 및 생활비',livingSum,'',[PR('living','food','식생활비'),PR('living','daily','생필품')])}
     ${PS('💊 건강 및 보험료',healthSum,'',[PR('health','woonInsure','운혁 보험'),PR('health','jiyunInsure','지윤 보험'),PR('health','woonSoccer','운혁 축구'),PR('health','woonPilates','운혁 필라테스'),PR('health','jiyunPilates','지윤 필라테스')])}
     ${PS('💰 저축',savingsSum,'',[PR('savings','woonJT','운혁 주택청약'),PR('savings','jiyunJT','지윤 주택청약')])}
@@ -951,14 +951,11 @@ function renderSettle(){
     +row('정수기',num(hou.water),jiMap['정수기']||0)
     +row('인터넷',num(hou.internet),jiMap['인터넷']||0);
 
-  var traP=num(tra.gas)+num(tra.carInstall)+num(tra.carMaint)+num(tra.carInsure)+num(tra.carTax)+num(tra.carRepair)+num(tra.eungpass);
-  var traA=(woMap['기름값']||0)+(woMap['차 할부금']||0)+(woMap['차 유지비']||0)+(woMap['보험']||0)+(woMap['차 세금']||0)+(woMap['차 수리비']||0)+(jiMap['교통']||0);
+  var traP=num(tra.gas)+num(tra.carInstall)+num(tra.carMaint)+num(tra.eungpass);
+  var traA=(woMap['기름값']||0)+(woMap['차 할부금']||0)+(woMap['차 유지비']||0)+(jiMap['교통']||0);
   var traHTML=row('기름값',num(tra.gas),woMap['기름값']||0)
     +row('차 할부금',num(tra.carInstall),woMap['차 할부금']||0)
     +row('차 유지비',num(tra.carMaint),woMap['차 유지비']||0)
-    +row('차 보험료',num(tra.carInsure),woMap['보험']||0)
-    +row('차 세금',num(tra.carTax),woMap['차 세금']||0)
-    +row('차 수리비',num(tra.carRepair),woMap['차 수리비']||0)
     +row('이응패스',num(tra.eungpass),jiMap['교통']||0);
 
   var livP=num(liv.food)+num(liv.daily);
