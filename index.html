@@ -912,8 +912,8 @@ function renderSettle(){
   function diff(plan,actual){
     var d=actual-plan;
     if(d===0) return '<span style="color:var(--sub)">-</span>';
-    if(d>0) return '<span style="color:var(--red);font-weight:700">+'+fmt(d)+'원</span>';
-    return '<span style="color:var(--woon);font-weight:700">-'+fmt(Math.abs(d))+'원</span>';
+    if(d>0) return '<span style="color:var(--red);font-weight:700">-'+fmt(d)+'원</span>';
+    return '<span style="color:var(--woon);font-weight:700">'+fmt(Math.abs(d))+'원</span>';
   }
 
   function row(label,plan,actual){
@@ -992,7 +992,7 @@ function renderSettle(){
     +'<div><div style="font-size:12px;color:var(--sub)">이번달 수입</div><div style="font-size:17px;font-weight:800;color:var(--green)">'+fmt(incPlan)+'원</div></div>'
     +'<div><div style="font-size:12px;color:var(--sub)">총 계획 지출</div><div style="font-size:17px;font-weight:800;color:var(--accent)">'+fmt(totalP)+'원</div></div>'
     +'<div><div style="font-size:12px;color:var(--sub)">총 실제 지출</div><div style="font-size:17px;font-weight:800;color:var(--red)">'+fmt(totalA)+'원</div></div>'
-    +'<div><div style="font-size:12px;color:var(--sub)">계획 대비</div><div style="font-size:17px;font-weight:800;color:'+totalDColor+'">'+(totalD>0?'+':'')+fmt(totalD)+'원</div></div>'
+    +'<div><div style="font-size:12px;color:var(--sub)">계획 대비</div><div style="font-size:17px;font-weight:800;color:'+totalDColor+'">'+(totalD>0?'-':'')+fmt(Math.abs(totalD))+'원</div></div>'
     +'</div></div>'
     +section('🏠 주거비',houHTML,houP,houA)
     +section('🚗 교통비',traHTML,traP,traA)
