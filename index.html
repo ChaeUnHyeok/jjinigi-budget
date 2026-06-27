@@ -431,32 +431,34 @@ function miniProgressHTML(label,used,total,color){
 
 // ── 집계 테이블 ──────────────────────────────────────────
 function aggTableHTML(rows, catKey){
-  const map={};
-  rows.forEach(r=>{const k=r[catKey]||'기타';map[k]=(map[k]||0)+num(r['금액']);});
+  const map={}, cntMap={};
+  rows.forEach(r=>{const k=r[catKey]||'기타';map[k]=(map[k]||0)+num(r['금액']);cntMap[k]=(cntMap[k]||0)+1;});
   const sorted=Object.entries(map).sort((a,b)=>b[1]-a[1]);
   const total=sorted.reduce((s,[,v])=>s+v,0);
+  const totalCnt=sorted.reduce((s,[k])=>s+cntMap[k],0);
   if(!sorted.length) return '';
   return `<div class="card-title" style="margin-top:4px">구분별 집계</div>
     <table class="agg-table">
-      <thead><tr><th>구분</th><th>금액</th></tr></thead>
+      <thead><tr><th>구분</th><th>건수</th><th>금액</th></tr></thead>
       <tbody>
-        ${sorted.map(([k,v])=>`<tr><td>${k}</td><td>${fmt(v)}원</td></tr>`).join('')}
-        <tr><td>합계</td><td>${fmt(total)}원</td></tr>
+        ${sorted.map(([k,v])=>`<tr><td>${k}</td><td style="text-align:center;color:var(--sub)">${cntMap[k]}건</td><td>${fmt(v)}원</td></tr>`).join('')}
+        <tr><td>합계</td><td style="text-align:center;color:var(--sub)">${totalCnt}건</td><td>${fmt(total)}원</td></tr>
       </tbody>
     </table>`;
 }
 
 function aggTableDetailHTML(rows){
-  // 필수/용돈 구분 후 세부구분 집계
-  const fixed={}, variable={};
+  const fixed={}, variable={}, fCnt={}, vCnt={};
   rows.forEach(r=>{
     const k=r['세부구분']||r['구분']||'기타';
     const amt=num(r['금액']);
-    if(r['필수지출여부']==='O') fixed[k]=(fixed[k]||0)+amt;
-    else variable[k]=(variable[k]||0)+amt;
+    if(r['필수지출여부']==='O'){ fixed[k]=(fixed[k]||0)+amt; fCnt[k]=(fCnt[k]||0)+1; }
+    else{ variable[k]=(variable[k]||0)+amt; vCnt[k]=(vCnt[k]||0)+1; }
   });
   const fTotal=Object.values(fixed).reduce((s,v)=>s+v,0);
   const vTotal=Object.values(variable).reduce((s,v)=>s+v,0);
+  const fTotalCnt=Object.values(fCnt).reduce((s,v)=>s+v,0);
+  const vTotalCnt=Object.values(vCnt).reduce((s,v)=>s+v,0);
 
   const fRows=Object.entries(fixed).sort((a,b)=>b[1]-a[1]);
   const vRows=Object.entries(variable).sort((a,b)=>b[1]-a[1]);
@@ -467,20 +469,20 @@ function aggTableDetailHTML(rows){
       <div>
         <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:6px">📌 필수지출</div>
         <table class="agg-table">
-          <thead><tr><th>구분</th><th>금액</th></tr></thead>
+          <thead><tr><th>구분</th><th>건수</th><th>금액</th></tr></thead>
           <tbody>
-            ${fRows.map(([k,v])=>`<tr><td>${k}</td><td>${fmt(v)}원</td></tr>`).join('')}
-            <tr><td>합계</td><td>${fmt(fTotal)}원</td></tr>
+            ${fRows.map(([k,v])=>`<tr><td>${k}</td><td style="text-align:center;color:var(--sub)">${fCnt[k]}건</td><td>${fmt(v)}원</td></tr>`).join('')}
+            <tr><td>합계</td><td style="text-align:center;color:var(--sub)">${fTotalCnt}건</td><td>${fmt(fTotal)}원</td></tr>
           </tbody>
         </table>
       </div>
       <div>
         <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:6px">💳 용돈</div>
         <table class="agg-table">
-          <thead><tr><th>구분</th><th>금액</th></tr></thead>
+          <thead><tr><th>구분</th><th>건수</th><th>금액</th></tr></thead>
           <tbody>
-            ${vRows.map(([k,v])=>`<tr><td>${k}</td><td>${fmt(v)}원</td></tr>`).join('')}
-            <tr><td>합계</td><td>${fmt(vTotal)}원</td></tr>
+            ${vRows.map(([k,v])=>`<tr><td>${k}</td><td style="text-align:center;color:var(--sub)">${vCnt[k]}건</td><td>${fmt(v)}원</td></tr>`).join('')}
+            <tr><td>합계</td><td style="text-align:center;color:var(--sub)">${vTotalCnt}건</td><td>${fmt(vTotal)}원</td></tr>
           </tbody>
         </table>
       </div>
