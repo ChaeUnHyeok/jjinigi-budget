@@ -152,6 +152,7 @@ tr:nth-child(even) td{background:#FAFBFC;}
   <div id="tab-plan" class="tab-panel"><div id="plan-content"></div></div>
 
   <div id="tab-living" class="tab-panel">
+    <div class="card" id="liv-progress-card" style="border-top:3px solid var(--accent);margin-bottom:14px"></div>
     <div class="card">
       <div class="card-title">새 항목 추가</div>
       <div class="grid-form">
@@ -497,8 +498,12 @@ function renderSummary(){
   const livSup=d.living.filter(r=>r['지원금여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
   const jiPlan=num(p.housing.rent)+num(p.housing.management)+num(p.housing.water)+num(p.housing.internet)+num(p.transport.eungpass)+num(p.living.food)+num(p.living.daily)+num(p.health.jiyunInsure)+num(p.health.jiyunPilates)+num(p.savings.jiyunJT)+num(p.pocket.jiyun);
   const jiUsed=sum(d.jiyun,'금액'),jiSup=d.jiyun.filter(r=>r['지원금여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
+  const jiEssUsed=d.jiyun.filter(r=>r['필수지출여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
+  const jiPktUsed=d.jiyun.filter(r=>r['필수지출여부']==='X').reduce((s,r)=>s+num(r['금액']),0);
   const woPlan=num(p.transport.gas)+num(p.transport.carInstall)+num(p.transport.carMaint)+num(p.health.woonInsure)+num(p.health.woonSoccer)+num(p.health.woonPilates)+num(p.savings.woonJT)+num(p.pocket.woon);
   const woUsed=sum(d.woon,'금액'),woSup=d.woon.filter(r=>r['지원금여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
+  const woEssUsed=d.woon.filter(r=>r['필수지출여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
+  const woPktUsed=d.woon.filter(r=>r['필수지출여부']==='X').reduce((s,r)=>s+num(r['금액']),0);
   const pkRows=d.parking,pkBal=pkRows.length>0?num(pkRows[pkRows.length-1]['잔액']):0;
   const pkIn=pkRows.reduce((s,r)=>s+num(r['수입']),0),pkOut=pkRows.reduce((s,r)=>s+num(r['지출']),0);
 
@@ -529,9 +534,19 @@ function renderSummary(){
     </div>
     <div class="card" style="border-top:3px solid var(--jiyun)">
       <div class="card-title">💗 지윤 소비 현황</div>${progressHTML(jiUsed,jiPlan,'var(--jiyun)')}${spendingInfoHTML(jiUsed,jiSup,'var(--jiyun)')}
+      <div class="mini-grid">
+        <div style="font-size:12px;font-weight:700;color:var(--sub);grid-column:1/-1;margin-bottom:-4px">세부 현황</div>
+        ${miniProgressHTML('📌 필수지출',jiEssUsed,Math.max(jiPlan-POCKET_LIMIT,1),'var(--accent)')}
+        ${miniProgressHTML('💳 용돈',jiPktUsed,POCKET_LIMIT,'var(--jiyun)')}
+      </div>
     </div>
     <div class="card" style="border-top:3px solid var(--woon)">
       <div class="card-title">💙 운혁 소비 현황</div>${progressHTML(woUsed,woPlan,'var(--woon)')}${spendingInfoHTML(woUsed,woSup,'var(--woon)')}
+      <div class="mini-grid">
+        <div style="font-size:12px;font-weight:700;color:var(--sub);grid-column:1/-1;margin-bottom:-4px">세부 현황</div>
+        ${miniProgressHTML('📌 필수지출',woEssUsed,Math.max(woPlan-POCKET_LIMIT,1),'var(--accent)')}
+        ${miniProgressHTML('💳 용돈',woPktUsed,POCKET_LIMIT,'var(--woon)')}
+      </div>
     </div>
     <div class="card" style="border-top:3px solid var(--yellow)">
       <div class="card-title">🏦 파킹통장 현황</div>
@@ -654,6 +669,10 @@ function updatePlanNote(sec,key,val){
 function renderLiving(){
   const rows=[...D().living].reverse();
   const total=sum(D().living,'금액');
+  const livPlan=num(D().plan.living.food)+num(D().plan.living.daily);
+  const livSup=D().living.filter(r=>r['지원금여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
+  const livCard=document.getElementById('liv-progress-card');
+  if(livCard) livCard.innerHTML=progressHTML(total,livPlan,'var(--accent)')+spendingInfoHTML(total,livSup,'var(--accent)');
   document.getElementById('liv-count').textContent='생활비 내역';
   document.getElementById('liv-total').textContent=`합계 ${fmt(total)}원`;
   const tbody=document.getElementById('liv-body');
@@ -714,7 +733,7 @@ function renderJiyun(){
   document.getElementById('jiyun-progress-card').innerHTML=`
     ${progressHTML(jiUsed,jiPlan,'var(--jiyun)')}${spendingInfoHTML(jiUsed,jiSup,'var(--jiyun)')}
     <div class="mini-grid">
-      <div style="font-size:12px;font-weight:700;color:var(--sub);grid-column:1/-1;margin-bottom:-4px">세부 달성률</div>
+      <div style="font-size:12px;font-weight:700;color:var(--sub);grid-column:1/-1;margin-bottom:-4px">세부 현황</div>
       ${miniProgressHTML('📌 필수지출',essUsed,Math.max(jiPlan-POCKET_LIMIT,1),'var(--accent)')}
       ${miniProgressHTML('💳 용돈',pktUsed,POCKET_LIMIT,'var(--jiyun)')}
     </div>`;
@@ -768,7 +787,7 @@ function renderWoon(){
   document.getElementById('woon-progress-card').innerHTML=`
     ${progressHTML(woUsed,woPlan,'var(--woon)')}${spendingInfoHTML(woUsed,woSup,'var(--woon)')}
     <div class="mini-grid">
-      <div style="font-size:12px;font-weight:700;color:var(--sub);grid-column:1/-1;margin-bottom:-4px">세부 달성률</div>
+      <div style="font-size:12px;font-weight:700;color:var(--sub);grid-column:1/-1;margin-bottom:-4px">세부 현황</div>
       ${miniProgressHTML('📌 필수지출',essUsed,Math.max(woPlan-POCKET_LIMIT,1),'var(--accent)')}
       ${miniProgressHTML('💳 용돈',pktUsed,POCKET_LIMIT,'var(--woon)')}
     </div>`;
@@ -857,42 +876,131 @@ document.getElementById('pk-date').value=today();
 updateJiyunCats();updateWoonCats();
 loadAll();
 
+// ── 모달 ─────────────────────────────────────────────────
+function showModal(html, onSave){
+  let overlay=document.getElementById('edit-modal');
+  if(!overlay){
+    overlay=document.createElement('div');
+    overlay.id='edit-modal';
+    overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px';
+    document.body.appendChild(overlay);
+  }
+  overlay.innerHTML='<div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:480px;box-shadow:0 8px 32px rgba(0,0,0,.18)">'
+    +html
+    +'<div style="display:flex;gap:8px;margin-top:16px">'
+    +'<button onclick="saveModal()" style="flex:1;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px;cursor:pointer;font-weight:700">저장</button>'
+    +'<button onclick="closeModal()" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px;cursor:pointer">취소</button>'
+    +'</div></div>';
+  overlay.style.display='flex';
+  overlay._onSave=onSave;
+}
+function closeModal(){
+  const m=document.getElementById('edit-modal');
+  if(m) m.style.display='none';
+}
+function saveModal(){
+  const m=document.getElementById('edit-modal');
+  if(m&&m._onSave) m._onSave();
+  closeModal();
+}
+
+function fieldRow(label, inputHTML){
+  return '<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--sub);display:block;margin-bottom:3px">'+label+'</label>'+inputHTML+'</div>';
+}
+function inp(id,type,val,placeholder){
+  return '<input id="'+id+'" type="'+(type||'text')+'" value="'+val+'" placeholder="'+(placeholder||'')+'" style="border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:13px;width:100%;outline:none">';
+}
+function sel(id,options,val){
+  return '<select id="'+id+'" style="border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:13px;width:100%;outline:none">'
+    +options.map(o=>'<option'+(o===val?' selected':'')+'>'+o+'</option>').join('')+'</select>';
+}
+
 // ── 수정 함수들 ──────────────────────────────────────────
 function editLiving(id){
   const r=D().living.find(x=>String(x.id)===String(id));
   if(!r)return;
-  const newAmt=prompt('금액 수정',r['금액']);
-  if(newAmt===null)return;
-  const newDesc=prompt('내용 수정',r['내용']);
-  if(newDesc===null)return;
-  const newNote=prompt('비고 수정',r['비고']||'');
-  r['금액']=num(newAmt);r['내용']=newDesc;r['비고']=newNote||'';
-  saveData(KEY.living(currentMonth),D().living);
-  renderLiving();renderSummary();setSyncStatus('✅ 수정됨');
+  const CATS=['생필품','교통','간식','외식','식비','카페','선물','필수지출','기타'];
+  showModal(
+    '<div style="font-weight:700;font-size:15px;margin-bottom:14px">생활비 수정</div>'
+    +fieldRow('날짜', inp('e-date','date',r['날짜']))
+    +fieldRow('내용', inp('e-desc','text',r['내용']))
+    +fieldRow('금액(원)', inp('e-amt','number',r['금액']))
+    +fieldRow('지불자', sel('e-payer',['운','지'],r['지불자']))
+    +fieldRow('구분', sel('e-cat',CATS,r['구분']))
+    +fieldRow('지원금', sel('e-sup',['X','O'],r['지원금여부']))
+    +fieldRow('비고', inp('e-note','text',r['비고']||'')),
+    function(){
+      r['날짜']=document.getElementById('e-date').value;
+      r['내용']=document.getElementById('e-desc').value;
+      r['금액']=num(document.getElementById('e-amt').value);
+      r['지불자']=document.getElementById('e-payer').value;
+      r['구분']=document.getElementById('e-cat').value;
+      r['지원금여부']=document.getElementById('e-sup').value;
+      r['비고']=document.getElementById('e-note').value;
+      saveData(KEY.living(currentMonth),D().living);
+      renderLiving();renderSummary();setSyncStatus('✅ 수정됨');
+    }
+  );
 }
+
 function editJiyun(id){
   const r=D().jiyun.find(x=>String(x.id)===String(id));
   if(!r)return;
-  const newAmt=prompt('금액 수정',r['금액']);
-  if(newAmt===null)return;
-  const newDesc=prompt('내용 수정',r['내용']);
-  if(newDesc===null)return;
-  const newNote=prompt('비고 수정',r['비고']||'');
-  r['금액']=num(newAmt);r['내용']=newDesc;r['비고']=newNote||'';
-  saveData(KEY.jiyun(currentMonth),D().jiyun);
-  renderJiyun();renderSummary();setSyncStatus('✅ 수정됨');
+  const FIXED=['임대료','관리비','정수기','인터넷','교통','보험','필라테스','주택청약'];
+  const VAR=['핸드폰','구독료','선물','식비','카페','생필품','공부','미용','기타','필수지출'];
+  const isFixed=r['필수지출여부']==='O';
+  const cats=isFixed?FIXED:VAR;
+  showModal(
+    '<div style="font-weight:700;font-size:15px;margin-bottom:14px">지윤소비 수정</div>'
+    +fieldRow('날짜', inp('e-date','date',r['날짜']))
+    +fieldRow('내용', inp('e-desc','text',r['내용']))
+    +fieldRow('금액(원)', inp('e-amt','number',r['금액']))
+    +fieldRow('필수지출 여부', sel('e-fixed',['X','O'],r['필수지출여부']))
+    +fieldRow('세부 구분', sel('e-cat',cats,r['세부구분']))
+    +fieldRow('지원금', sel('e-sup',['X','O'],r['지원금여부']))
+    +fieldRow('비고', inp('e-note','text',r['비고']||'')),
+    function(){
+      r['날짜']=document.getElementById('e-date').value;
+      r['내용']=document.getElementById('e-desc').value;
+      r['금액']=num(document.getElementById('e-amt').value);
+      r['필수지출여부']=document.getElementById('e-fixed').value;
+      r['세부구분']=document.getElementById('e-cat').value;
+      r['지원금여부']=document.getElementById('e-sup').value;
+      r['비고']=document.getElementById('e-note').value;
+      saveData(KEY.jiyun(currentMonth),D().jiyun);
+      renderJiyun();renderSummary();setSyncStatus('✅ 수정됨');
+    }
+  );
 }
+
 function editWoon(id){
   const r=D().woon.find(x=>String(x.id)===String(id));
   if(!r)return;
-  const newAmt=prompt('금액 수정',r['금액']);
-  if(newAmt===null)return;
-  const newDesc=prompt('내용 수정',r['내용']);
-  if(newDesc===null)return;
-  const newNote=prompt('비고 수정',r['비고']||'');
-  r['금액']=num(newAmt);r['내용']=newDesc;r['비고']=newNote||'';
-  saveData(KEY.woon(currentMonth),D().woon);
-  renderWoon();renderSummary();setSyncStatus('✅ 수정됨');
+  const FIXED=['기름값','차 할부금','차 유지비','보험','축구','필라테스','주택청약'];
+  const VAR=['핸드폰','구독료','선물','식비','카페','생필품','공부','미용','기타','필수지출'];
+  const isFixed=r['필수지출여부']==='O';
+  const cats=isFixed?FIXED:VAR;
+  showModal(
+    '<div style="font-weight:700;font-size:15px;margin-bottom:14px">운혁소비 수정</div>'
+    +fieldRow('날짜', inp('e-date','date',r['날짜']))
+    +fieldRow('내용', inp('e-desc','text',r['내용']))
+    +fieldRow('금액(원)', inp('e-amt','number',r['금액']))
+    +fieldRow('필수지출 여부', sel('e-fixed',['X','O'],r['필수지출여부']))
+    +fieldRow('세부 구분', sel('e-cat',cats,r['세부구분']))
+    +fieldRow('지원금', sel('e-sup',['X','O'],r['지원금여부']))
+    +fieldRow('비고', inp('e-note','text',r['비고']||'')),
+    function(){
+      r['날짜']=document.getElementById('e-date').value;
+      r['내용']=document.getElementById('e-desc').value;
+      r['금액']=num(document.getElementById('e-amt').value);
+      r['필수지출여부']=document.getElementById('e-fixed').value;
+      r['세부구분']=document.getElementById('e-cat').value;
+      r['지원금여부']=document.getElementById('e-sup').value;
+      r['비고']=document.getElementById('e-note').value;
+      saveData(KEY.woon(currentMonth),D().woon);
+      renderWoon();renderSummary();setSyncStatus('✅ 수정됨');
+    }
+  );
 }
 
 // ── 정산 탭 ──────────────────────────────────────────────
