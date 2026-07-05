@@ -223,7 +223,7 @@ tr:nth-child(even) td{background:#FAFBFC;}
       <div class="card-title">새 항목 추가</div>
       <div class="grid-form">
         <div><label class="field-label">날짜</label><input type="date" id="pk-date"/></div>
-        <div><label class="field-label">사람</label><select id="pk-person"><option>공동</option><option>지윤</option><option>운혁</option></select></div>
+        <div><label class="field-label">사람</label><select id="pk-person"><option>공동</option><option>지윤</option><option>운혁</option><option>이월잔액</option></select></div>
         <div><label class="field-label">내용</label><input type="text" id="pk-desc" placeholder="내용 입력"/></div>
         <div><label class="field-label">수입(원)</label><input type="number" id="pk-income" placeholder="0"/></div>
         <div><label class="field-label">지출(원)</label><input type="number" id="pk-expense" placeholder="0"/></div>
@@ -505,7 +505,7 @@ function renderSummary(){
   const woEssUsed=d.woon.filter(r=>r['필수지출여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
   const woPktUsed=d.woon.filter(r=>r['필수지출여부']==='X').reduce((s,r)=>s+num(r['금액']),0);
   const pkRows=d.parking,pkBal=pkRows.length>0?num(pkRows[pkRows.length-1]['잔액']):0;
-  const pkIn=pkRows.reduce((s,r)=>s+num(r['수입']),0),pkOut=pkRows.reduce((s,r)=>s+num(r['지출']),0);
+  const pkIn=pkRows.filter(r=>r['사람']!=='이월잔액').reduce((s,r)=>s+num(r['수입']),0),pkOut=pkRows.reduce((s,r)=>s+num(r['지출']),0);
 
   // 목표 배너
   const goalPct=Math.min(100,Math.round(pkBal/GOAL_AMOUNT*100));
@@ -601,20 +601,20 @@ function renderPlan(){
     ${PS('💳 용돈',pocketSum,'',[PR('pocket','woon','운혁'),PR('pocket','jiyun','지윤')])}
     <div class="card">
       <div class="card-title">📊 이번달 결산</div>
-      <div class="result-row"><span>총 수입</span><span style="color:var(--green);font-weight:700">${fmt(ti)}원</span></div>
-      <div class="result-row"><span>총 지출 <span style="font-size:12px;color:var(--sub)">(수입의 ${expPct}%)</span></span><span style="color:var(--red);font-weight:700">${fmt(totalExp)}원</span></div>
-      <div class="result-row bold"><span>파킹통장 저축 <span style="font-size:12px;color:var(--sub)">(수입의 ${savPct}%)</span></span><span style="color:${leftover<0?'var(--red)':'var(--yellow)'}">${fmt(leftover)}원</span></div>
+      <div class="result-row"><span>총 수입</span><span style="font-weight:700">${fmt(ti)}원</span></div>
+      <div class="result-row"><span>총 지출 <span style="font-size:12px;color:var(--sub)">(수입의 ${expPct}%)</span></span><span style="font-weight:700">${fmt(totalExp)}원</span></div>
+      <div class="result-row bold"><span>저축 <span style="font-size:12px;color:var(--sub)">(수입의 ${savPct}%)</span></span><span style="font-weight:700">${fmt(leftover)}원</span></div>
       <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
         <div style="font-weight:700;font-size:13px;margin-bottom:10px;color:var(--sub)">💗 지윤 세부 내역</div>
-        <div class="result-row" style="font-size:13px"><span style="color:var(--sub)">지윤 수입</span><span style="color:var(--green)">${fmt(jiInc)}원</span></div>
-        <div class="result-row" style="font-size:13px"><span style="color:var(--sub)">지윤 지출</span><span style="color:var(--red)">${fmt(jiExp)}원</span></div>
-        <div class="result-row" style="font-size:13px;font-weight:700"><span style="color:var(--jiyun)">지윤 → 파킹통장 송금액</span><span style="color:${jiPark<0?'var(--red)':'var(--yellow)'}">${fmt(jiPark)}원</span></div>
+        <div class="result-row" style="font-size:13px"><span style="color:var(--sub)">수입</span><span>${fmt(jiInc)}원</span></div>
+        <div class="result-row" style="font-size:13px"><span style="color:var(--sub)">지출</span><span>${fmt(jiExp)}원</span></div>
+        <div class="result-row" style="font-size:13px;font-weight:700"><span style="color:var(--jiyun)">파킹통장 송금액</span><span>${fmt(jiPark)}원</span></div>
       </div>
       <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
         <div style="font-weight:700;font-size:13px;margin-bottom:10px;color:var(--sub)">💙 운혁 세부 내역</div>
-        <div class="result-row" style="font-size:13px"><span style="color:var(--sub)">운혁 수입</span><span style="color:var(--green)">${fmt(woInc)}원</span></div>
-        <div class="result-row" style="font-size:13px"><span style="color:var(--sub)">운혁 지출</span><span style="color:var(--red)">${fmt(woExp)}원</span></div>
-        <div class="result-row" style="font-size:13px;font-weight:700"><span style="color:var(--woon)">운혁 → 파킹통장 송금액</span><span style="color:${woPark<0?'var(--red)':'var(--yellow)'}">${fmt(woPark)}원</span></div>
+        <div class="result-row" style="font-size:13px"><span style="color:var(--sub)">수입</span><span>${fmt(woInc)}원</span></div>
+        <div class="result-row" style="font-size:13px"><span style="color:var(--sub)">지출</span><span>${fmt(woExp)}원</span></div>
+        <div class="result-row" style="font-size:13px;font-weight:700"><span style="color:var(--woon)">파킹통장 송금액</span><span>${fmt(woPark)}원</span></div>
       </div>
     </div>
   `;
@@ -829,7 +829,7 @@ async function deleteWoon(id){
 function renderParking(){
   const rows=D().parking;
   const pkBal=rows.length>0?num(rows[rows.length-1]['잔액']):0;
-  const pkIn=rows.reduce((s,r)=>s+num(r['수입']),0),pkOut=rows.reduce((s,r)=>s+num(r['지출']),0);
+  const pkIn=rows.filter(r=>r['사람']!=='이월잔액').reduce((s,r)=>s+num(r['수입']),0),pkOut=rows.reduce((s,r)=>s+num(r['지출']),0);
   document.getElementById('parking-top').innerHTML=`
     ${amountCardHTML('현재 잔액',pkBal,'var(--yellow)','var(--yellow-light)')}
     ${amountCardHTML('총 입금',pkIn,'var(--green)','var(--green-light)')}
@@ -839,13 +839,20 @@ function renderParking(){
   const tbody=document.getElementById('pk-body');
   if(!rows.length){tbody.innerHTML=`<tr><td colspan="7" class="empty">기록이 없습니다.</td></tr>`;return;}
   tbody.innerHTML=[...rows].reverse().map(r=>{
-    const person=r['사람'],bc=person==='지윤'?'badge-jiyun':person==='운혁'?'badge-woon':'badge-joint';
+    const person=r['사람'];
+    const bc=person==='지윤'?'badge-jiyun':person==='운혁'?'badge-woon':person==='이월잔액'?'badge-joint':'badge-joint';
+    const pStyle=person==='이월잔액'?'background:var(--yellow-light);color:var(--yellow)':'';
     return `<tr>
-      <td>${r['날짜']}</td><td><span class="badge ${bc}">${person}</span></td><td>${r['내용']}</td>
-      <td>${r['수입']?`<span style="color:var(--green)">+${fmt(r['수입'])}원</span>`:'-'}</td>
+      <td>${r['날짜']}</td>
+      <td><span class="badge ${bc}" style="${pStyle}">${person}</span></td>
+      <td>${r['내용']}</td>
+      <td>${r['수입']?`<span style="color:${person==='이월잔액'?'var(--sub)':'var(--green)'}">${person==='이월잔액'?'':'+'} ${fmt(r['수입'])}원</span>`:'-'}</td>
       <td>${r['지출']?`<span style="color:var(--red)">-${fmt(r['지출'])}원</span>`:'-'}</td>
       <td><strong>${fmt(r['잔액'])}원</strong></td>
-      <td><button class="del-btn" onclick="deleteParking('${r['id']}')">삭제</button></td>
+      <td style="display:flex;gap:4px">
+        <button class="add-btn" style="padding:3px 8px;font-size:12px;margin-top:0;background:var(--yellow-light);color:var(--yellow)" onclick="editParking('${r['id']}')">수정</button>
+        <button class="del-btn" onclick="deleteParking('${r['id']}')">삭제</button>
+      </td>
     </tr>`;
   }).join('');
 }
@@ -999,6 +1006,33 @@ function editWoon(id){
       r['비고']=document.getElementById('e-note').value;
       saveData(KEY.woon(currentMonth),D().woon);
       renderWoon();renderSummary();setSyncStatus('✅ 수정됨');
+    }
+  );
+}
+
+function editParking(id){
+  const r=D().parking.find(x=>String(x.id)===String(id));
+  if(!r)return;
+  showModal(
+    '<div style="font-weight:700;font-size:15px;margin-bottom:14px">파킹통장 수정</div>'
+    +fieldRow('날짜', inp('e-date','date',r['날짜']))
+    +fieldRow('사람', sel('e-person',['공동','지윤','운혁','이월잔액'],r['사람']))
+    +fieldRow('내용', inp('e-desc','text',r['내용']))
+    +fieldRow('수입(원)', inp('e-income','number',r['수입']||''))
+    +fieldRow('지출(원)', inp('e-expense','number',r['지출']||'')),
+    function(){
+      r['날짜']=document.getElementById('e-date').value;
+      r['사람']=document.getElementById('e-person').value;
+      r['내용']=document.getElementById('e-desc').value;
+      r['수입']=num(document.getElementById('e-income').value)||'';
+      r['지출']=num(document.getElementById('e-expense').value)||'';
+      // 잔액 전체 재계산
+      let bal=0;
+      const sorted=[...D().parking].sort((a,b)=>a.id-b.id);
+      sorted.forEach(x=>{bal=bal+num(x['수입'])-num(x['지출']);x['잔액']=bal;});
+      getMonthData(currentMonth).parking=sorted;
+      saveData(KEY.parking(currentMonth),D().parking);
+      renderParking();renderSummary();setSyncStatus('✅ 수정됨');
     }
   );
 }
