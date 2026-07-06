@@ -496,7 +496,7 @@ function renderSummary(){
   const ti=num(p.income.woonSalary)+num(p.income.woonBonus)+num(p.income.jiyunSalary)+num(p.income.jiyunBonus);
   const livUsed=sum(d.living,'금액'),livPlan=num(p.living.food)+num(p.living.daily);
   const livSup=d.living.filter(r=>r['지원금여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
-  const jiPlan=num(p.housing.rent)+num(p.housing.management)+num(p.housing.water)+num(p.housing.internet)+num(p.transport.eungpass)+num(p.living.food)+num(p.living.daily)+num(p.health.jiyunInsure)+num(p.health.jiyunPilates)+num(p.savings.jiyunJT)+num(p.pocket.jiyun);
+  const jiPlan=num(p.housing.rent)+num(p.housing.management)+num(p.housing.water)+num(p.housing.internet)+num(p.transport.eungpass)+num(p.health.jiyunInsure)+num(p.health.jiyunPilates)+num(p.savings.jiyunJT)+num(p.pocket.jiyun);
   const jiUsed=sum(d.jiyun,'금액'),jiSup=d.jiyun.filter(r=>r['지원금여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
   const jiEssUsed=d.jiyun.filter(r=>r['필수지출여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
   const jiPktUsed=d.jiyun.filter(r=>r['필수지출여부']==='X').reduce((s,r)=>s+num(r['금액']),0);
@@ -582,7 +582,7 @@ function renderPlan(){
   const savPct=ti>0?Math.round(leftover/ti*100):0;
   const expPct=ti>0?Math.round(totalExp/ti*100):0;
 
-  const jiExp=num(hou.rent)+num(hou.management)+num(hou.water)+num(hou.internet)+num(tra.eungpass)+num(liv.food)+num(liv.daily)+num(hea.jiyunInsure)+num(hea.jiyunPilates)+num(sav.jiyunJT)+num(poc.jiyun);
+  const jiExp=num(hou.rent)+num(hou.management)+num(hou.water)+num(hou.internet)+num(tra.eungpass)+num(hea.jiyunInsure)+num(hea.jiyunPilates)+num(sav.jiyunJT)+num(poc.jiyun);
   const jiInc=num(inc.jiyunSalary)+num(inc.jiyunBonus);
   const jiPark=jiInc-jiExp;
   const woExp=num(tra.gas)+num(tra.carInstall)+num(tra.carMaint)+num(hea.woonInsure)+num(hea.woonSoccer)+num(hea.woonPilates)+num(sav.woonJT)+num(poc.woon);
@@ -595,6 +595,7 @@ function renderPlan(){
     ${PS('📥 수입',ti,'var(--green)',[PR('income','woonSalary','운혁 급여',true),PR('income','woonBonus','운혁 인센티브',true),PR('income','jiyunSalary','지윤 급여',true),PR('income','jiyunBonus','지윤 인센티브',true)],true)}
     ${PS('🏠 주거비',housingSum,'',[PR('housing','rent','임대료'),PR('housing','management','관리비'),PR('housing','water','정수기'),PR('housing','internet','인터넷')])}
     ${PS('🚗 교통비',transSum,'',[PR('transport','gas','기름값'),PR('transport','carInstall','차 할부금'),PR('transport','carMaint','차 유지비'),PR('transport','eungpass','이응패스')])}
+
     ${PS('🍚 식비 및 생활비',livingSum,'',[PR('living','food','식생활비'),PR('living','daily','생필품')])}
     ${PS('💊 건강 및 보험료',healthSum,'',[PR('health','woonInsure','운혁 보험'),PR('health','jiyunInsure','지윤 보험'),PR('health','woonSoccer','운혁 축구'),PR('health','woonPilates','운혁 필라테스'),PR('health','jiyunPilates','지윤 필라테스')])}
     ${PS('💰 저축',savingsSum,'',[PR('savings','woonJT','운혁 주택청약'),PR('savings','jiyunJT','지윤 주택청약')])}
@@ -726,7 +727,7 @@ function updateJiyunCats(){
 }
 function renderJiyun(){
   const d=D(),p=d.plan;
-  const jiPlan=num(p.housing.rent)+num(p.housing.management)+num(p.housing.water)+num(p.housing.internet)+num(p.transport.eungpass)+num(p.living.food)+num(p.living.daily)+num(p.health.jiyunInsure)+num(p.health.jiyunPilates)+num(p.savings.jiyunJT)+num(p.pocket.jiyun);
+  const jiPlan=num(p.housing.rent)+num(p.housing.management)+num(p.housing.water)+num(p.housing.internet)+num(p.transport.eungpass)+num(p.health.jiyunInsure)+num(p.health.jiyunPilates)+num(p.savings.jiyunJT)+num(p.pocket.jiyun);
   const jiUsed=sum(d.jiyun,'금액'),jiSup=d.jiyun.filter(r=>r['지원금여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
   const essUsed=d.jiyun.filter(r=>r['필수지출여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
   const pktUsed=d.jiyun.filter(r=>r['필수지출여부']==='X').reduce((s,r)=>s+num(r['금액']),0);
