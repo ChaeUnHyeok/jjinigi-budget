@@ -120,7 +120,7 @@ tr:nth-child(even) td{background:#FAFBFC;}
 .col-filter-wrap{position:relative;display:inline-block;}
 .col-filter-btn{background:none;border:none;cursor:pointer;font-size:11px;color:var(--sub);padding:0 2px;vertical-align:middle;}
 .col-filter-btn.has-filter{color:var(--accent);font-weight:700;}
-.col-filter-dropdown{position:absolute;top:100%;left:0;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:300;min-width:160px;padding:8px 0;display:none;}
+.col-filter-dropdown{position:fixed;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:300;min-width:180px;padding:8px 0;display:none;max-height:320px;overflow-y:auto;}
 .col-filter-dropdown.open{display:block;}
 .col-filter-item{display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:13px;transition:background .1s;}
 .col-filter-item:hover{background:var(--bg);}
@@ -184,7 +184,7 @@ tr:nth-child(even) td{background:#FAFBFC;}
     </div>
     <div class="card">
       <div class="section-header"><span class="s-title" id="liv-count">생활비 내역</span><span class="s-total" id="liv-total"></span></div>
-      <div class="table-wrap"><table><thead><tr><th>날짜</th><th>내용</th><th>금액</th><th>지불자</th><th><div class="col-filter-wrap">구분<button class="col-filter-btn" id="liv-filter-btn" onclick="toggleFilterDropdown('liv')">▼</button><div class="col-filter-dropdown" id="liv-filter-dropdown"></div></div></th><th>지원금</th><th>비고</th><th>송금완료</th><th></th></tr></thead><tbody id="liv-body"></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>날짜</th><th>내용</th><th>금액</th><th>지불자</th><th><div class="col-filter-wrap">구분<button class="col-filter-btn" id="liv-filter-btn" onclick="toggleFilterDropdown('liv',this)">▼</button><div class="col-filter-dropdown" id="liv-filter-dropdown"></div></div></th><th>지원금</th><th>비고</th><th>송금완료</th><th></th></tr></thead><tbody id="liv-body"></tbody></table></div>
     </div>
     <div class="card" id="liv-agg-card"></div>
   </div>
@@ -206,7 +206,7 @@ tr:nth-child(even) td{background:#FAFBFC;}
     </div>
     <div class="card">
       <div class="section-header"><span class="s-title" id="ji-count">지윤 소비 내역</span><span class="s-total" style="color:var(--jiyun)" id="ji-total"></span></div>
-      <div class="table-wrap"><table><thead><tr><th>날짜</th><th>내용</th><th>금액</th><th>필수</th><th><div class="col-filter-wrap">구분<button class="col-filter-btn" id="ji-filter-btn" onclick="toggleFilterDropdown('ji')">▼</button><div class="col-filter-dropdown" id="ji-filter-dropdown"></div></div></th><th>지원금</th><th>비고</th><th></th></tr></thead><tbody id="ji-body"></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>날짜</th><th>내용</th><th>금액</th><th>필수</th><th><div class="col-filter-wrap">구분<button class="col-filter-btn" id="ji-filter-btn" onclick="toggleFilterDropdown('ji',this)">▼</button><div class="col-filter-dropdown" id="ji-filter-dropdown"></div></div></th><th>지원금</th><th>비고</th><th></th></tr></thead><tbody id="ji-body"></tbody></table></div>
     </div>
     <div class="card" id="ji-agg-card"></div>
   </div>
@@ -228,7 +228,7 @@ tr:nth-child(even) td{background:#FAFBFC;}
     </div>
     <div class="card">
       <div class="section-header"><span class="s-title" id="wo-count">운혁 소비 내역</span><span class="s-total" style="color:var(--woon)" id="wo-total"></span></div>
-      <div class="table-wrap"><table><thead><tr><th>날짜</th><th>내용</th><th>금액</th><th>필수</th><th><div class="col-filter-wrap">구분<button class="col-filter-btn" id="wo-filter-btn" onclick="toggleFilterDropdown('wo')">▼</button><div class="col-filter-dropdown" id="wo-filter-dropdown"></div></div></th><th>지원금</th><th>비고</th><th></th></tr></thead><tbody id="wo-body"></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>날짜</th><th>내용</th><th>금액</th><th>필수</th><th><div class="col-filter-wrap">구분<button class="col-filter-btn" id="wo-filter-btn" onclick="toggleFilterDropdown('wo',this)">▼</button><div class="col-filter-dropdown" id="wo-filter-dropdown"></div></div></th><th>지원금</th><th>비고</th><th></th></tr></thead><tbody id="wo-body"></tbody></table></div>
     </div>
     <div class="card" id="wo-agg-card"></div>
   </div>
@@ -918,32 +918,109 @@ loadAll();
 
 
 // ── 엑셀형 필터 함수 ──────────────────────────────────────
+// 임시 선택 상태 (확인 전)
+let tempFilters={};
+
 function updateFilterDropdown(type, allCats, activeSet){
   const dd=document.getElementById(type+'-filter-dropdown');
   if(!dd) return;
   const cats=[...new Set(allCats)].sort();
-  const allChecked=activeSet.size===0;
+  // 임시 상태 초기화 (드롭다운 업데이트 시 activeSet 기준으로)
+  if(!tempFilters[type]) tempFilters[type]=new Set(activeSet);
+  const tmp=tempFilters[type];
+  const allChecked=tmp.size===0;
   dd.innerHTML=
-    `<div class="col-filter-item" onclick="toggleFilterAll('${type}')">
-      <input type="checkbox" ${allChecked?'checked':''} onclick="event.stopPropagation();toggleFilterAll('${type}')"> 전체 선택
+    `<div class="col-filter-item" onclick="toggleTempAll('${type}')">
+      <input type="checkbox" id="chk-${type}-all" ${allChecked?'checked':''} onclick="event.stopPropagation();toggleTempAll('${type}')"> <span>전체 선택</span>
     </div>`
     +cats.map(c=>
-      `<div class="col-filter-item" onclick="toggleFilterCat('${type}','${c}')">
-        <input type="checkbox" ${activeSet.has(c)?'checked':''} onclick="event.stopPropagation();toggleFilterCat('${type}','${c}')"> ${c}
+      `<div class="col-filter-item" onclick="toggleTempCat('${type}','${c}')">
+        <input type="checkbox" id="chk-${type}-${c}" ${tmp.has(c)?'checked':''} onclick="event.stopPropagation();toggleTempCat('${type}','${c}')"> <span>${c}</span>
       </div>`
     ).join('')
     +`<div class="col-filter-actions">
       <button onclick="clearFilter('${type}')" style="background:var(--bg);border:1px solid var(--border);color:var(--sub)">초기화</button>
-      <button onclick="closeFilterDropdown('${type}')" style="background:var(--accent);color:#fff">확인</button>
+      <button onclick="applyFilter('${type}')" style="background:var(--accent);color:#fff">확인</button>
     </div>`;
 }
 
-function toggleFilterDropdown(type){
+function toggleFilterDropdown(type, btn){
+  // 이미 열려있는 드롭다운 닫기
+  const already=document.querySelector('.col-filter-dropdown.open');
+  if(already&&already.id===type+'-filter-dropdown'){
+    already.classList.remove('open');
+    return;
+  }
+  document.querySelectorAll('.col-filter-dropdown').forEach(d=>d.classList.remove('open'));
+
   const dd=document.getElementById(type+'-filter-dropdown');
   if(!dd) return;
-  const isOpen=dd.classList.contains('open');
-  document.querySelectorAll('.col-filter-dropdown').forEach(d=>d.classList.remove('open'));
-  if(!isOpen) dd.classList.add('open');
+
+  // 임시 상태를 현재 activeSet으로 초기화
+  const activeSet=type==='liv'?livFilters:type==='ji'?jiFilters:woFilters;
+  tempFilters[type]=new Set(activeSet);
+
+  // 위치: 버튼 기준으로 고정 위치 계산
+  const btnEl=document.getElementById(type+'-filter-btn');
+  if(btnEl){
+    const rect=btnEl.getBoundingClientRect();
+    dd.style.position='fixed';
+    dd.style.top=(rect.bottom+4)+'px';
+    dd.style.left=rect.left+'px';
+    dd.style.right='auto';
+    // 화면 오른쪽 넘침 방지
+    setTimeout(()=>{
+      const ddRect=dd.getBoundingClientRect();
+      if(ddRect.right>window.innerWidth-8){
+        dd.style.left=(window.innerWidth-ddRect.width-8)+'px';
+      }
+      // 화면 아래 넘침 방지
+      if(ddRect.bottom>window.innerHeight-8){
+        dd.style.top=(rect.top-ddRect.height-4)+'px';
+      }
+    },0);
+  }
+
+  dd.classList.add('open');
+}
+
+function toggleTempAll(type){
+  const tmp=tempFilters[type]||(tempFilters[type]=new Set());
+  const allChk=document.getElementById('chk-'+type+'-all');
+  if(tmp.size>0){ tmp.clear(); if(allChk) allChk.checked=true; }
+  else{ if(allChk) allChk.checked=true; }
+  // 개별 체크박스 업데이트
+  document.querySelectorAll('[id^="chk-'+type+'-"]').forEach(el=>{
+    if(el.id!=='chk-'+type+'-all') el.checked=false;
+  });
+  tmp.clear();
+}
+
+function toggleTempCat(type, cat){
+  const tmp=tempFilters[type]||(tempFilters[type]=new Set());
+  if(tmp.has(cat)) tmp.delete(cat);
+  else tmp.add(cat);
+  const chk=document.getElementById('chk-'+type+'-'+cat);
+  if(chk) chk.checked=tmp.has(cat);
+  // 전체선택 체크박스 상태 업데이트
+  const allChk=document.getElementById('chk-'+type+'-all');
+  if(allChk) allChk.checked=tmp.size===0;
+}
+
+function applyFilter(type){
+  const tmp=tempFilters[type]||new Set();
+  if(type==='liv'){ livFilters=new Set(tmp); renderLiving(); }
+  else if(type==='ji'){ jiFilters=new Set(tmp); renderJiyun(); }
+  else{ woFilters=new Set(tmp); renderWoon(); }
+  closeFilterDropdown(type);
+}
+
+function clearFilter(type){
+  tempFilters[type]=new Set();
+  if(type==='liv'){ livFilters=new Set(); renderLiving(); }
+  else if(type==='ji'){ jiFilters=new Set(); renderJiyun(); }
+  else{ woFilters=new Set(); renderWoon(); }
+  closeFilterDropdown(type);
 }
 
 function closeFilterDropdown(type){
@@ -951,35 +1028,9 @@ function closeFilterDropdown(type){
   if(dd) dd.classList.remove('open');
 }
 
-function toggleFilterAll(type){
-  const set=type==='liv'?livFilters:type==='ji'?jiFilters:woFilters;
-  set.clear();
-  if(type==='liv') renderLiving();
-  else if(type==='ji') renderJiyun();
-  else renderWoon();
-}
-
-function toggleFilterCat(type, cat){
-  const set=type==='liv'?livFilters:type==='ji'?jiFilters:woFilters;
-  if(set.has(cat)) set.delete(cat);
-  else set.add(cat);
-  if(type==='liv') renderLiving();
-  else if(type==='ji') renderJiyun();
-  else renderWoon();
-}
-
-function clearFilter(type){
-  const set=type==='liv'?livFilters:type==='ji'?jiFilters:woFilters;
-  set.clear();
-  closeFilterDropdown(type);
-  if(type==='liv') renderLiving();
-  else if(type==='ji') renderJiyun();
-  else renderWoon();
-}
-
 // 드롭다운 외부 클릭 시 닫기
 document.addEventListener('click', function(e){
-  if(!e.target.closest('.col-filter-wrap')){
+  if(!e.target.closest('.col-filter-wrap')&&!e.target.closest('.col-filter-dropdown')){
     document.querySelectorAll('.col-filter-dropdown').forEach(d=>d.classList.remove('open'));
   }
 });
