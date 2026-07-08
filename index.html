@@ -111,6 +111,22 @@ tr:nth-child(even) td{background:#FAFBFC;}
 .spinner{width:34px;height:34px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .empty{text-align:center;padding:28px 0;color:var(--sub);font-size:13px;}
+.filter-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;align-items:center;}
+.filter-chip{padding:4px 12px;border:1px solid var(--border);border-radius:99px;cursor:pointer;font-size:12px;color:var(--sub);background:none;white-space:nowrap;}
+.filter-chip.active{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700;}
+.filter-label{font-size:12px;color:var(--sub);margin-right:2px;}
+
+/* 엑셀형 필터 드롭다운 */
+.col-filter-wrap{position:relative;display:inline-block;}
+.col-filter-btn{background:none;border:none;cursor:pointer;font-size:11px;color:var(--sub);padding:0 2px;vertical-align:middle;}
+.col-filter-btn.has-filter{color:var(--accent);font-weight:700;}
+.col-filter-dropdown{position:absolute;top:100%;left:0;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:300;min-width:160px;padding:8px 0;display:none;}
+.col-filter-dropdown.open{display:block;}
+.col-filter-item{display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:13px;transition:background .1s;}
+.col-filter-item:hover{background:var(--bg);}
+.col-filter-item input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:var(--accent);}
+.col-filter-actions{display:flex;gap:6px;padding:8px 14px;border-top:1px solid var(--border);margin-top:4px;}
+.col-filter-actions button{flex:1;padding:5px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:600;}
 
 @media(max-width:600px){
   .grid-2,.grid-3{grid-template-columns:1fr;}
@@ -168,7 +184,7 @@ tr:nth-child(even) td{background:#FAFBFC;}
     </div>
     <div class="card">
       <div class="section-header"><span class="s-title" id="liv-count">생활비 내역</span><span class="s-total" id="liv-total"></span></div>
-      <div class="table-wrap"><table><thead><tr><th>날짜</th><th>내용</th><th>금액</th><th>지불자</th><th>구분</th><th>지원금</th><th>비고</th><th>송금완료</th><th></th></tr></thead><tbody id="liv-body"></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>날짜</th><th>내용</th><th>금액</th><th>지불자</th><th><div class="col-filter-wrap">구분<button class="col-filter-btn" id="liv-filter-btn" onclick="toggleFilterDropdown('liv')">▼</button><div class="col-filter-dropdown" id="liv-filter-dropdown"></div></div></th><th>지원금</th><th>비고</th><th>송금완료</th><th></th></tr></thead><tbody id="liv-body"></tbody></table></div>
     </div>
     <div class="card" id="liv-agg-card"></div>
   </div>
@@ -190,7 +206,7 @@ tr:nth-child(even) td{background:#FAFBFC;}
     </div>
     <div class="card">
       <div class="section-header"><span class="s-title" id="ji-count">지윤 소비 내역</span><span class="s-total" style="color:var(--jiyun)" id="ji-total"></span></div>
-      <div class="table-wrap"><table><thead><tr><th>날짜</th><th>내용</th><th>금액</th><th>필수</th><th>구분</th><th>지원금</th><th>비고</th><th></th></tr></thead><tbody id="ji-body"></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>날짜</th><th>내용</th><th>금액</th><th>필수</th><th><div class="col-filter-wrap">구분<button class="col-filter-btn" id="ji-filter-btn" onclick="toggleFilterDropdown('ji')">▼</button><div class="col-filter-dropdown" id="ji-filter-dropdown"></div></div></th><th>지원금</th><th>비고</th><th></th></tr></thead><tbody id="ji-body"></tbody></table></div>
     </div>
     <div class="card" id="ji-agg-card"></div>
   </div>
@@ -212,7 +228,7 @@ tr:nth-child(even) td{background:#FAFBFC;}
     </div>
     <div class="card">
       <div class="section-header"><span class="s-title" id="wo-count">운혁 소비 내역</span><span class="s-total" style="color:var(--woon)" id="wo-total"></span></div>
-      <div class="table-wrap"><table><thead><tr><th>날짜</th><th>내용</th><th>금액</th><th>필수</th><th>구분</th><th>지원금</th><th>비고</th><th></th></tr></thead><tbody id="wo-body"></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>날짜</th><th>내용</th><th>금액</th><th>필수</th><th><div class="col-filter-wrap">구분<button class="col-filter-btn" id="wo-filter-btn" onclick="toggleFilterDropdown('wo')">▼</button><div class="col-filter-dropdown" id="wo-filter-dropdown"></div></div></th><th>지원금</th><th>비고</th><th></th></tr></thead><tbody id="wo-body"></tbody></table></div>
     </div>
     <div class="card" id="wo-agg-card"></div>
   </div>
@@ -263,6 +279,7 @@ let currentMonth="";
 let months=[];
 let monthData={};
 let planSaveTimer=null;
+let livFilters=new Set(), jiFilters=new Set(), woFilters=new Set();
 
 const fmt=n=>(Number(n)||0).toLocaleString('ko-KR');
 const num=v=>Number(String(v).replace(/,/g,''))||0;
@@ -582,7 +599,7 @@ function renderPlan(){
   const savPct=ti>0?Math.round(leftover/ti*100):0;
   const expPct=ti>0?Math.round(totalExp/ti*100):0;
 
-  const jiExp=num(hou.rent)+num(hou.management)+num(hou.water)+num(hou.internet)+num(tra.eungpass)+num(hea.jiyunInsure)+num(hea.jiyunPilates)+num(sav.jiyunJT)+num(poc.jiyun);
+  const jiExp=num(hou.rent)+num(hou.management)+num(hou.water)+num(hou.internet)+num(tra.eungpass)+num(liv.food)+num(liv.daily)+num(hea.jiyunInsure)+num(hea.jiyunPilates)+num(sav.jiyunJT)+num(poc.jiyun);
   const jiInc=num(inc.jiyunSalary)+num(inc.jiyunBonus);
   const jiPark=jiInc-jiExp;
   const woExp=num(tra.gas)+num(tra.carInstall)+num(tra.carMaint)+num(hea.woonInsure)+num(hea.woonSoccer)+num(hea.woonPilates)+num(sav.woonJT)+num(poc.woon);
@@ -674,11 +691,16 @@ function renderLiving(){
   const livSup=D().living.filter(r=>r['지원금여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
   const livCard=document.getElementById('liv-progress-card');
   if(livCard) livCard.innerHTML=progressHTML(total,livPlan,'var(--accent)')+spendingInfoHTML(total,livSup,'var(--accent)');
-  document.getElementById('liv-count').textContent='생활비 내역';
-  document.getElementById('liv-total').textContent=`합계 ${fmt(total)}원`;
+  updateFilterDropdown('liv', D().living.map(r=>r['구분']).filter(Boolean), livFilters);
+  const filtered=livFilters.size===0?rows:rows.filter(r=>livFilters.has(r['구분']));
+  const filteredTotal=filtered.reduce((s,r)=>s+num(r['금액']),0);
+  const livBtn=document.getElementById('liv-filter-btn');
+  if(livBtn) livBtn.className='col-filter-btn'+(livFilters.size>0?' has-filter':'');
+  document.getElementById('liv-count').textContent='생활비 내역'+(livFilters.size>0?' ('+livFilters.size+'개 필터)':'');
+  document.getElementById('liv-total').textContent=`합계 ${fmt(filteredTotal)}원`;
   const tbody=document.getElementById('liv-body');
-  if(!rows.length){tbody.innerHTML=`<tr><td colspan="9" class="empty">기록이 없습니다.</td></tr>`;}
-  else tbody.innerHTML=rows.map(r=>{
+  if(!filtered.length){tbody.innerHTML=`<tr><td colspan="9" class="empty">필터 결과가 없습니다.</td></tr>`;}
+  else tbody.innerHTML=filtered.map(r=>{
     const isWoon=r['지불자']==='운';
     const done=r['송금완료']===true;
     return `<tr id="liv-row-${r['id']}">
@@ -739,11 +761,16 @@ function renderJiyun(){
       ${miniProgressHTML('💳 용돈',pktUsed,POCKET_LIMIT,'var(--jiyun)')}
     </div>`;
   const rows=[...d.jiyun].reverse();
-  document.getElementById('ji-count').textContent='지윤 소비 내역';
-  document.getElementById('ji-total').textContent=`합계 ${fmt(jiUsed)}원`;
+  updateFilterDropdown('ji', d.jiyun.map(r=>r['세부구분']).filter(Boolean), jiFilters);
+  const jiFiltered=jiFilters.size===0?rows:rows.filter(r=>jiFilters.has(r['세부구분']));
+  const jiFilteredTotal=jiFiltered.reduce((s,r)=>s+num(r['금액']),0);
+  const jiBtn=document.getElementById('ji-filter-btn');
+  if(jiBtn) jiBtn.className='col-filter-btn'+(jiFilters.size>0?' has-filter':'');
+  document.getElementById('ji-count').textContent='지윤 소비 내역'+(jiFilters.size>0?' ('+jiFilters.size+'개 필터)':'');
+  document.getElementById('ji-total').textContent=`합계 ${fmt(jiFilteredTotal)}원`;
   const tbody=document.getElementById('ji-body');
-  if(!rows.length){tbody.innerHTML=`<tr><td colspan="8" class="empty">기록이 없습니다.</td></tr>`;}
-  else tbody.innerHTML=rows.map(r=>`<tr id="ji-row-${r['id']}">
+  if(!jiFiltered.length){tbody.innerHTML=`<tr><td colspan="8" class="empty">필터 결과가 없습니다.</td></tr>`;}
+  else tbody.innerHTML=jiFiltered.map(r=>`<tr id="ji-row-${r['id']}">
     <td>${r['날짜']}</td><td>${r['내용']}</td><td>${fmt(r['금액'])}원</td>
     <td style="color:${r['필수지출여부']==='O'?'var(--jiyun)':'var(--sub)'}">${r['필수지출여부']}</td>
     <td>${r['세부구분']}</td>
@@ -793,11 +820,16 @@ function renderWoon(){
       ${miniProgressHTML('💳 용돈',pktUsed,POCKET_LIMIT,'var(--woon)')}
     </div>`;
   const rows=[...d.woon].reverse();
-  document.getElementById('wo-count').textContent='운혁 소비 내역';
-  document.getElementById('wo-total').textContent=`합계 ${fmt(woUsed)}원`;
+  updateFilterDropdown('wo', d.woon.map(r=>r['세부구분']).filter(Boolean), woFilters);
+  const woFiltered=woFilters.size===0?rows:rows.filter(r=>woFilters.has(r['세부구분']));
+  const woFilteredTotal=woFiltered.reduce((s,r)=>s+num(r['금액']),0);
+  const woBtn=document.getElementById('wo-filter-btn');
+  if(woBtn) woBtn.className='col-filter-btn'+(woFilters.size>0?' has-filter':'');
+  document.getElementById('wo-count').textContent='운혁 소비 내역'+(woFilters.size>0?' ('+woFilters.size+'개 필터)':'');
+  document.getElementById('wo-total').textContent=`합계 ${fmt(woFilteredTotal)}원`;
   const tbody=document.getElementById('wo-body');
-  if(!rows.length){tbody.innerHTML=`<tr><td colspan="8" class="empty">기록이 없습니다.</td></tr>`;}
-  else tbody.innerHTML=rows.map(r=>`<tr id="wo-row-${r['id']}">
+  if(!woFiltered.length){tbody.innerHTML=`<tr><td colspan="8" class="empty">필터 결과가 없습니다.</td></tr>`;}
+  else tbody.innerHTML=woFiltered.map(r=>`<tr id="wo-row-${r['id']}">
     <td>${r['날짜']}</td><td>${r['내용']}</td><td>${fmt(r['금액'])}원</td>
     <td style="color:${r['필수지출여부']==='O'?'var(--woon)':'var(--sub)'}">${r['필수지출여부']}</td>
     <td>${r['세부구분']}</td>
@@ -883,6 +915,75 @@ document.getElementById('wo-date').value=today();
 document.getElementById('pk-date').value=today();
 updateJiyunCats();updateWoonCats();
 loadAll();
+
+
+// ── 엑셀형 필터 함수 ──────────────────────────────────────
+function updateFilterDropdown(type, allCats, activeSet){
+  const dd=document.getElementById(type+'-filter-dropdown');
+  if(!dd) return;
+  const cats=[...new Set(allCats)].sort();
+  const allChecked=activeSet.size===0;
+  dd.innerHTML=
+    `<div class="col-filter-item" onclick="toggleFilterAll('${type}')">
+      <input type="checkbox" ${allChecked?'checked':''} onclick="event.stopPropagation();toggleFilterAll('${type}')"> 전체 선택
+    </div>`
+    +cats.map(c=>
+      `<div class="col-filter-item" onclick="toggleFilterCat('${type}','${c}')">
+        <input type="checkbox" ${activeSet.has(c)?'checked':''} onclick="event.stopPropagation();toggleFilterCat('${type}','${c}')"> ${c}
+      </div>`
+    ).join('')
+    +`<div class="col-filter-actions">
+      <button onclick="clearFilter('${type}')" style="background:var(--bg);border:1px solid var(--border);color:var(--sub)">초기화</button>
+      <button onclick="closeFilterDropdown('${type}')" style="background:var(--accent);color:#fff">확인</button>
+    </div>`;
+}
+
+function toggleFilterDropdown(type){
+  const dd=document.getElementById(type+'-filter-dropdown');
+  if(!dd) return;
+  const isOpen=dd.classList.contains('open');
+  document.querySelectorAll('.col-filter-dropdown').forEach(d=>d.classList.remove('open'));
+  if(!isOpen) dd.classList.add('open');
+}
+
+function closeFilterDropdown(type){
+  const dd=document.getElementById(type+'-filter-dropdown');
+  if(dd) dd.classList.remove('open');
+}
+
+function toggleFilterAll(type){
+  const set=type==='liv'?livFilters:type==='ji'?jiFilters:woFilters;
+  set.clear();
+  if(type==='liv') renderLiving();
+  else if(type==='ji') renderJiyun();
+  else renderWoon();
+}
+
+function toggleFilterCat(type, cat){
+  const set=type==='liv'?livFilters:type==='ji'?jiFilters:woFilters;
+  if(set.has(cat)) set.delete(cat);
+  else set.add(cat);
+  if(type==='liv') renderLiving();
+  else if(type==='ji') renderJiyun();
+  else renderWoon();
+}
+
+function clearFilter(type){
+  const set=type==='liv'?livFilters:type==='ji'?jiFilters:woFilters;
+  set.clear();
+  closeFilterDropdown(type);
+  if(type==='liv') renderLiving();
+  else if(type==='ji') renderJiyun();
+  else renderWoon();
+}
+
+// 드롭다운 외부 클릭 시 닫기
+document.addEventListener('click', function(e){
+  if(!e.target.closest('.col-filter-wrap')){
+    document.querySelectorAll('.col-filter-dropdown').forEach(d=>d.classList.remove('open'));
+  }
+});
+
 
 // ── 모달 ─────────────────────────────────────────────────
 function showModal(html, onSave){
