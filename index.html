@@ -427,9 +427,13 @@ function amountCardHTML(label,amount,color,bg,sub=''){
 function progressHTML(used,total,color){
   const p=total>0?Math.min(100,Math.round(used/total*100)):0;
   const bc=p>90?'var(--red)':p>70?'var(--yellow)':color;
+  const remain=total-used;
+  const remainHTML=remain<0
+    ? `<span style="color:var(--red);font-weight:700">-${fmt(Math.abs(remain))}원 초과</span>`
+    : `${fmt(remain)}원`;
   return `<div class="progress-info"><span>${fmt(used)}원 사용</span><span>${p}%</span></div>
-    <div class="progress-bar"><div class="progress-fill" style="width:${p}%;background:${bc}"></div></div>
-    <div class="progress-sub">전체 ${fmt(total)}원 | 잔여 ${fmt(Math.max(0,total-used))}원</div>`;
+    <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(p,100)}%;background:${bc}"></div></div>
+    <div class="progress-sub">전체 ${fmt(total)}원 | 잔여 ${remainHTML}</div>`;
 }
 function spendingInfoHTML(used,support,color){
   return `<div class="spending-info">
