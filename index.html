@@ -444,10 +444,14 @@ function spendingInfoHTML(used,support,color){
 function miniProgressHTML(label,used,total,color){
   const p=total>0?Math.min(100,Math.round(used/total*100)):0;
   const bc=p>90?'var(--red)':p>70?'var(--yellow)':color;
+  const remain=total-used;
+  const remainHTML=remain<0
+    ? `<span style="color:var(--red);font-weight:700">-${fmt(Math.abs(remain))}원 초과</span>`
+    : `<span>잔여 ${fmt(remain)}원</span>`;
   return `<div>
     <div class="mini-progress-label"><span style="color:var(--sub);font-size:11px">${label}</span><span style="color:${bc};font-weight:700;font-size:11px">${p}%</span></div>
     <div class="mini-progress-bar"><div class="mini-progress-fill" style="width:${p}%;background:${bc}"></div></div>
-    <div style="font-size:10px;color:var(--sub);margin-top:2px">${fmt(used)} / ${fmt(total)}원</div>
+    <div style="font-size:10px;color:var(--sub);margin-top:2px">${fmt(used)} / ${fmt(total)}원 | ${remainHTML}</div>
   </div>`;
 }
 
