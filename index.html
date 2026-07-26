@@ -323,7 +323,10 @@ async function loadAll(){
     const saved=await loadData(KEY.months);
     if(saved&&saved.length>0) months=saved;
     else months=[thisMonth()];
-    if(!currentMonth||!months.includes(currentMonth)) currentMonth=months[months.length-1];
+    // URL 파라미터에서 월 복원
+    const urlMonth=new URLSearchParams(window.location.search).get('month');
+    if(urlMonth&&months.includes(urlMonth)) currentMonth=urlMonth;
+    else if(!currentMonth||!months.includes(currentMonth)) currentMonth=months[months.length-1];
     await loadMonthData(currentMonth);
     renderMonthBar();
     renderAll();
@@ -365,6 +368,10 @@ function renderMonthBar(){
 async function switchMonth(m){
   currentMonth=m;
   if(!monthData[m]){setSyncStatus('🔄 로드 중...');await loadMonthData(m);setSyncStatus('✅ 로드됨');}
+  // URL에 월 저장 (즐겨찾기 대응)
+  const url=new URL(window.location);
+  url.searchParams.set('month',m);
+  window.history.replaceState({},'',url);
   renderMonthBar();renderAll();
 }
 
