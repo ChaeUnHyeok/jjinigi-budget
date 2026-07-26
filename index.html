@@ -248,6 +248,7 @@ tr:nth-child(even) td{background:#FAFBFC;}
     </div>
     <div class="card">
       <div class="section-header"><span class="s-title" id="pk-count">파킹통장 내역</span><span class="s-total" style="color:var(--yellow)" id="pk-balance"></span></div>
+      <div id="pk-sort-bar"></div>
       <div class="table-wrap"><table><thead><tr><th>날짜</th><th>사람</th><th>내용</th><th>수입</th><th>지출</th><th>잔액</th><th></th></tr></thead><tbody id="pk-body"></tbody></table></div>
     </div>
   </div>
@@ -280,6 +281,8 @@ let months=[];
 let monthData={};
 let planSaveTimer=null;
 let livFilters=new Set(), jiFilters=new Set(), woFilters=new Set();
+let livSort='latest', jiSort='latest', woSort='latest', pkSort='latest';
+// sort: 'asc'=오름차순, 'desc'=내림차순, 'latest'=최신등록순
 
 const fmt=n=>(Number(n)||0).toLocaleString('ko-KR');
 const num=v=>Number(String(v).replace(/,/g,''))||0;
@@ -290,7 +293,7 @@ const sum=(arr,key)=>arr.reduce((s,r)=>s+num(r[key]||0),0);
 const deepCopy=o=>JSON.parse(JSON.stringify(o));
 
 function getMonthData(m){
-  if(!monthData[m]) monthData[m]={plan:deepCopy(DEFAULT_PLAN),living:[],jiyun:[],woon:[],parking:[]};
+  if(!monthData[m]) monthData[m]={plan:deepCopy(DEFAULT_PLAN),living:[],jiyun:[],woon:[],parking:[],settleExtra:{jiExtra:0,woExtra:0}};
   return monthData[m];
 }
 function D(){return getMonthData(currentMonth);}
@@ -305,6 +308,7 @@ const KEY={
   jiyun:m=>`hb_${m}_jiyun`,
   woon:m=>`hb_${m}_woon`,
   parking:m=>`hb_${m}_parking`,
+  settleExtra:m=>`hb_${m}_settle_extra`,
 };
 
 async function saveData(key,data){
@@ -336,16 +340,19 @@ async function loadAll(){
 }
 
 async function loadMonthData(m){
-  const [plan,living,jiyun,woon,parking]=await Promise.all([
+  const [plan,living,jiyun,woon,parking,settleExtra]=await Promise.all([
     loadData(KEY.plan(m)),loadData(KEY.living(m)),
-    loadData(KEY.jiyun(m)),loadData(KEY.woon(m)),loadData(KEY.parking(m))
+    loadData(KEY.jiyun(m)),loadData(KEY.woon(m)),loadData(KEY.parking(m)),
+    loadData(KEY.settleExtra(m))
   ]);
-  if(!monthData[m]) monthData[m]={plan:deepCopy(DEFAULT_PLAN),living:[],jiyun:[],woon:[],parking:[]};
+  if(!monthData[m]) monthData[m]={plan:deepCopy(DEFAULT_PLAN),living:[],jiyun:[],woon:[],parking:[],settleExtra:{jiExtra:0,woExtra:0}};
   if(plan){ monthData[m].plan={...deepCopy(DEFAULT_PLAN),...plan,notes:plan.notes||{}}; }
   if(living) monthData[m].living=living;
   if(jiyun) monthData[m].jiyun=jiyun;
   if(woon) monthData[m].woon=woon;
   if(parking) monthData[m].parking=parking;
+  if(settleExtra) monthData[m].settleExtra=settleExtra;
+  else monthData[m].settleExtra={jiExtra:0,woExtra:0};
 }
 
 function setSyncStatus(msg){document.getElementById('sync-status').textContent=msg;}
@@ -700,7 +707,7 @@ function updatePlanNote(sec,key,val){
 
 // ── 생활비 ───────────────────────────────────────────────
 function renderLiving(){
-  const rows=[...D().living].reverse();
+  const rows=sortRows(D().living,livSort,'날짜');
   const total=sum(D().living,'금액');
   const livPlan=num(D().plan.living.food)+num(D().plan.living.daily);
   const livSup=D().living.filter(r=>r['지원금여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
@@ -713,6 +720,8 @@ function renderLiving(){
   if(livBtn) livBtn.className='col-filter-btn'+(livFilters.size>0?' has-filter':'');
   document.getElementById('liv-count').textContent='생활비 내역'+(livFilters.size>0?' ('+livFilters.size+'개 필터)':'');
   document.getElementById('liv-total').textContent=`합계 ${fmt(filteredTotal)}원`;
+  const livSortBar=document.getElementById('liv-sort-bar');
+  if(livSortBar) livSortBar.innerHTML=sortBarHTML('liv',livSort);
   const tbody=document.getElementById('liv-body');
   if(!filtered.length){tbody.innerHTML=`<tr><td colspan="9" class="empty">필터 결과가 없습니다.</td></tr>`;}
   else tbody.innerHTML=filtered.map(r=>{
@@ -775,7 +784,7 @@ function renderJiyun(){
       ${miniProgressHTML('📌 필수지출',essUsed,Math.max(jiPlan-POCKET_LIMIT,1),'var(--accent)')}
       ${miniProgressHTML('💳 용돈',pktUsed,POCKET_LIMIT,'var(--jiyun)')}
     </div>`;
-  const rows=[...d.jiyun].reverse();
+  const rows=sortRows(d.jiyun,jiSort,'날짜');
   updateFilterDropdown('ji', d.jiyun.map(r=>r['세부구분']).filter(Boolean), jiFilters);
   const jiFiltered=jiFilters.size===0?rows:rows.filter(r=>jiFilters.has(r['세부구분']));
   const jiFilteredTotal=jiFiltered.reduce((s,r)=>s+num(r['금액']),0);
@@ -783,6 +792,8 @@ function renderJiyun(){
   if(jiBtn) jiBtn.className='col-filter-btn'+(jiFilters.size>0?' has-filter':'');
   document.getElementById('ji-count').textContent='지윤 소비 내역'+(jiFilters.size>0?' ('+jiFilters.size+'개 필터)':'');
   document.getElementById('ji-total').textContent=`합계 ${fmt(jiFilteredTotal)}원`;
+  const jiSortBar=document.getElementById('ji-sort-bar');
+  if(jiSortBar) jiSortBar.innerHTML=sortBarHTML('ji',jiSort);
   const tbody=document.getElementById('ji-body');
   if(!jiFiltered.length){tbody.innerHTML=`<tr><td colspan="8" class="empty">필터 결과가 없습니다.</td></tr>`;}
   else tbody.innerHTML=jiFiltered.map(r=>`<tr id="ji-row-${r['id']}">
@@ -834,7 +845,7 @@ function renderWoon(){
       ${miniProgressHTML('📌 필수지출',essUsed,Math.max(woPlan-POCKET_LIMIT,1),'var(--accent)')}
       ${miniProgressHTML('💳 용돈',pktUsed,POCKET_LIMIT,'var(--woon)')}
     </div>`;
-  const rows=[...d.woon].reverse();
+  const rows=sortRows(d.woon,woSort,'날짜');
   updateFilterDropdown('wo', d.woon.map(r=>r['세부구분']).filter(Boolean), woFilters);
   const woFiltered=woFilters.size===0?rows:rows.filter(r=>woFilters.has(r['세부구분']));
   const woFilteredTotal=woFiltered.reduce((s,r)=>s+num(r['금액']),0);
@@ -842,6 +853,8 @@ function renderWoon(){
   if(woBtn) woBtn.className='col-filter-btn'+(woFilters.size>0?' has-filter':'');
   document.getElementById('wo-count').textContent='운혁 소비 내역'+(woFilters.size>0?' ('+woFilters.size+'개 필터)':'');
   document.getElementById('wo-total').textContent=`합계 ${fmt(woFilteredTotal)}원`;
+  const woSortBar=document.getElementById('wo-sort-bar');
+  if(woSortBar) woSortBar.innerHTML=sortBarHTML('wo',woSort);
   const tbody=document.getElementById('wo-body');
   if(!woFiltered.length){tbody.innerHTML=`<tr><td colspan="8" class="empty">필터 결과가 없습니다.</td></tr>`;}
   else tbody.innerHTML=woFiltered.map(r=>`<tr id="wo-row-${r['id']}">
@@ -886,7 +899,10 @@ function renderParking(){
   document.getElementById('pk-balance').textContent=`잔액 ${fmt(pkBal)}원`;
   const tbody=document.getElementById('pk-body');
   if(!rows.length){tbody.innerHTML=`<tr><td colspan="7" class="empty">기록이 없습니다.</td></tr>`;return;}
-  tbody.innerHTML=[...rows].reverse().map(r=>{
+  const sortedPk=sortRows(rows,pkSort,'날짜');
+  const pkSortBar=document.getElementById('pk-sort-bar');
+  if(pkSortBar) pkSortBar.innerHTML=sortBarHTML('pk',pkSort);
+  tbody.innerHTML=sortedPk.map(r=>{
     const person=r['사람'];
     const bc=person==='지윤'?'badge-jiyun':person==='운혁'?'badge-woon':person==='이월잔액'?'badge-joint':'badge-joint';
     const pStyle=person==='이월잔액'?'background:var(--yellow-light);color:var(--yellow)':'';
@@ -931,6 +947,27 @@ document.getElementById('pk-date').value=today();
 updateJiyunCats();updateWoonCats();
 loadAll();
 
+
+// ── 정렬 헬퍼 ────────────────────────────────────────────
+function sortRows(rows, sortType, dateKey){
+  const r=[...rows];
+  if(sortType==='asc') return r.sort((a,b)=>(a[dateKey]||'').localeCompare(b[dateKey]||''));
+  if(sortType==='desc') return r.sort((a,b)=>(b[dateKey]||'').localeCompare(a[dateKey]||''));
+  return r.reverse(); // latest: 최신등록순
+}
+function sortBarHTML(type, current){
+  const opts=[['latest','최신등록'],['desc','날짜↓'],['asc','날짜↑']];
+  return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">'
+    +'<span style="font-size:11px;color:var(--sub)">정렬:</span>'
+    +opts.map(([v,l])=>`<button onclick="setSort('${type}','${v}')" style="padding:3px 10px;border-radius:99px;border:1px solid ${current===v?'var(--accent)':'var(--border)'};background:${current===v?'var(--accent)':'none'};color:${current===v?'#fff':'var(--sub)'};cursor:pointer;font-size:12px">${l}</button>`).join('')
+    +'</div>';
+}
+function setSort(type,val){
+  if(type==='liv'){livSort=val;renderLiving();}
+  else if(type==='ji'){jiSort=val;renderJiyun();}
+  else if(type==='wo'){woSort=val;renderWoon();}
+  else if(type==='pk'){pkSort=val;renderParking();}
+}
 
 // ── 엑셀형 필터 함수 ──────────────────────────────────────
 // 임시 선택 상태 (확인 전)
@@ -1212,6 +1249,11 @@ function renderSettle(){
   const d=D(), p=d.plan||{};
   const inc=p.income||{}, hou=p.housing||{}, tra=p.transport||{};
   const liv=p.living||{}, hea=p.health||{}, sav=p.savings||{}, poc=p.pocket||{};
+  // 계획 금액 계산
+  const jiPlan=num(hou.rent)+num(hou.management)+num(hou.water)+num(hou.internet)+num(tra.eungpass)+num(hea.jiyunInsure)+num(hea.jiyunPilates)+num(sav.jiyunJT)+num(poc.jiyun);
+  const woPlan=num(tra.gas)+num(tra.carInstall)+num(tra.carMaint)+num(hea.woonInsure)+num(hea.woonSoccer)+num(hea.woonPilates)+num(sav.woonJT)+num(poc.woon);
+  const jiUsed=sum(d.jiyun,'금액');
+  const woUsed=sum(d.woon,'금액');
 
   const jiMap={};
   d.jiyun.forEach(function(r){var k=r['세부구분']||'기타';jiMap[k]=(jiMap[k]||0)+num(r['금액']);});
@@ -1310,7 +1352,81 @@ function renderSettle(){
     +section('💰 저축',savHTML,savP,savA)
     +section('💳 용돈',pocHTML,pocP,pocA);
 
-  el.innerHTML=html;
+  // ── 추가 송금 테이블 ──
+  const se=D().settleExtra||{};
+  const jiExtra=se.jiExtra||0;
+  const woExtra=se.woExtra||0;
+
+  // 지윤: 계획=(생활비계획+지윤소비계획), 실제=(생활비실제+지윤소비실제), 지원금=(생활비지원금+지윤소비지원금)
+  const jiPlanTotal=livP+jiPlan;
+  const jiActualTotal=livTotal+jiUsed;
+  const jiSupportTotal=d.living.filter(r=>r['지원금여부']==='O').reduce((s,r)=>s+num(r['금액']),0)
+    +d.jiyun.filter(r=>r['지원금여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
+  // 추가송금 = (계획-실제) + 지원금 + 기타
+  const jiTransfer=(jiPlanTotal-jiActualTotal)+jiSupportTotal+num(jiExtra);
+
+  // 운혁: 계획=운혁소비계획, 실제=운혁소비실제, 지원금=운혁소비지원금
+  const woPlanTotal=woPlan;
+  const woActualTotal=woUsed;
+  const woSupportTotal=d.woon.filter(r=>r['지원금여부']==='O').reduce((s,r)=>s+num(r['금액']),0);
+  const woTransfer=(woPlanTotal-woActualTotal)+woSupportTotal+num(woExtra);
+
+  function transferColor(v){ return v<0?'var(--red)':v>0?'var(--green)':'var(--sub)'; }
+
+  const transferTable='<div class="card" style="margin-top:14px;border-top:3px solid var(--yellow)">'
+    +'<div class="card-title" style="margin-bottom:14px">💸 추가 파킹통장 송금 정산</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px">'
+    +'<thead><tr style="background:var(--bg)">'
+    +'<th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);color:var(--sub)">항목</th>'
+    +'<th style="padding:8px;text-align:center;border-bottom:1px solid var(--border);color:var(--jiyun)" colspan="2">지윤</th>'
+    +'<th style="padding:8px;text-align:center;border-bottom:1px solid var(--border);color:var(--woon)">운혁</th>'
+    +'</tr>'
+    +'<tr style="background:var(--bg)">'
+    +'<th style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--sub)"></th>'
+    +'<th style="padding:6px 8px;text-align:right;border-bottom:1px solid var(--border);color:var(--sub);font-weight:500">생활비</th>'
+    +'<th style="padding:6px 8px;text-align:right;border-bottom:1px solid var(--border);color:var(--sub);font-weight:500">지윤소비</th>'
+    +'<th style="padding:6px 8px;text-align:right;border-bottom:1px solid var(--border);color:var(--sub);font-weight:500">운혁소비</th>'
+    +'</tr></thead>'
+    +'<tbody>'
+    +'<tr><td style="padding:7px 8px;color:var(--sub)">계획금액</td>'
+    +'<td style="padding:7px 8px;text-align:right">'+fmt(livP)+'원</td>'
+    +'<td style="padding:7px 8px;text-align:right">'+fmt(jiPlan)+'원</td>'
+    +'<td style="padding:7px 8px;text-align:right">'+fmt(woPlan)+'원</td></tr>'
+    +'<tr style="font-weight:700"><td style="padding:7px 8px;color:var(--sub)">실제 사용금액</td>'
+    +'<td style="padding:7px 8px;text-align:right;color:var(--red)">'+fmt(livTotal)+'원</td>'
+    +'<td style="padding:7px 8px;text-align:right;color:var(--red)">'+fmt(jiUsed)+'원</td>'
+    +'<td style="padding:7px 8px;text-align:right;color:var(--red)">'+fmt(woUsed)+'원</td></tr>'
+    +'<tr><td style="padding:7px 8px;color:var(--sub)">지원금 사용액</td>'
+    +'<td style="padding:7px 8px;text-align:right;color:var(--accent)">'+fmt(d.living.filter(r=>r['지원금여부']==='O').reduce((s,r)=>s+num(r['금액']),0))+'원</td>'
+    +'<td style="padding:7px 8px;text-align:right;color:var(--accent)">'+fmt(d.jiyun.filter(r=>r['지원금여부']==='O').reduce((s,r)=>s+num(r['금액']),0))+'원</td>'
+    +'<td style="padding:7px 8px;text-align:right;color:var(--accent)">'+fmt(woSupportTotal)+'원</td></tr>'
+    +'<tr><td style="padding:7px 8px;color:var(--sub)">기타</td>'
+    +'<td colspan="2" style="padding:7px 8px;text-align:right"><input type="number" value="'+jiExtra+'" placeholder="0" oninput="updateSettleExtra(&apos;ji&apos;,this.value)" style="border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px;width:120px;text-align:right"></td>'
+    +'<td style="padding:7px 8px;text-align:right"><input type="number" value="'+woExtra+'" placeholder="0" oninput="updateSettleExtra(&apos;wo&apos;,this.value)" style="border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px;width:120px;text-align:right"></td></tr>'
+    +'</tbody>'
+    +(function(){
+    var jiLabel=jiTransfer<0?' (부족)':jiTransfer>0?' (잉여)':'';
+    var woLabel=woTransfer<0?' (부족)':woTransfer>0?' (잉여)':'';
+    return '<tfoot><tr style="border-top:2px solid var(--border);font-weight:800;font-size:14px">'
+      +'<td style="padding:9px 8px">추가 송금금액</td>'
+      +'<td colspan="2" style="padding:9px 8px;text-align:right;color:'+transferColor(jiTransfer)+'">'+fmt(Math.abs(jiTransfer))+jiLabel+'원</td>'
+      +'<td style="padding:9px 8px;text-align:right;color:'+transferColor(woTransfer)+'">'+fmt(Math.abs(woTransfer))+woLabel+'원</td>'
+      +'</tr></tfoot>';
+  })()
+    +'</table>'
+    +'<div style="font-size:11px;color:var(--sub);margin-top:10px">* 추가 송금금액 = (계획 - 실제) + 지원금 + 기타</div>'
+    +'</div>';
+
+  el.innerHTML=html+transferTable;
+}
+
+function updateSettleExtra(type, val){
+  if(!D().settleExtra) getMonthData(currentMonth).settleExtra={jiExtra:0,woExtra:0};
+  if(type==='ji') D().settleExtra.jiExtra=num(val);
+  else D().settleExtra.woExtra=num(val);
+  saveData(KEY.settleExtra(currentMonth),D().settleExtra);
+  // 숫자만 업데이트 (전체 재렌더 하면 포커스 잃음)
+  renderSettle();
 }
 setInterval(loadAll,30000);
 </script>
