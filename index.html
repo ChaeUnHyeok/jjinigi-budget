@@ -293,7 +293,7 @@ const sum=(arr,key)=>arr.reduce((s,r)=>s+num(r[key]||0),0);
 const deepCopy=o=>JSON.parse(JSON.stringify(o));
 
 function getMonthData(m){
-  if(!monthData[m]) monthData[m]={plan:deepCopy(DEFAULT_PLAN),living:[],jiyun:[],woon:[],parking:[],settleExtra:{jiExtra:0,woExtra:0}};
+  if(!monthData[m]) monthData[m]={plan:deepCopy(DEFAULT_PLAN),living:[],jiyun:[],woon:[],parking:[],settleExtra:{jiExtra:0,woExtra:0},comments:{}};
   return monthData[m];
 }
 function D(){return getMonthData(currentMonth);}
@@ -309,6 +309,7 @@ const KEY={
   woon:m=>`hb_${m}_woon`,
   parking:m=>`hb_${m}_parking`,
   settleExtra:m=>`hb_${m}_settle_extra`,
+  comments:m=>`hb_${m}_comments`,
 };
 
 async function saveData(key,data){
@@ -340,12 +341,12 @@ async function loadAll(){
 }
 
 async function loadMonthData(m){
-  const [plan,living,jiyun,woon,parking,settleExtra]=await Promise.all([
+  const [plan,living,jiyun,woon,parking,settleExtra,comments]=await Promise.all([
     loadData(KEY.plan(m)),loadData(KEY.living(m)),
     loadData(KEY.jiyun(m)),loadData(KEY.woon(m)),loadData(KEY.parking(m)),
-    loadData(KEY.settleExtra(m))
+    loadData(KEY.settleExtra(m)),loadData(KEY.comments(m))
   ]);
-  if(!monthData[m]) monthData[m]={plan:deepCopy(DEFAULT_PLAN),living:[],jiyun:[],woon:[],parking:[],settleExtra:{jiExtra:0,woExtra:0}};
+  if(!monthData[m]) monthData[m]={plan:deepCopy(DEFAULT_PLAN),living:[],jiyun:[],woon:[],parking:[],settleExtra:{jiExtra:0,woExtra:0},comments:{}};
   if(plan){ monthData[m].plan={...deepCopy(DEFAULT_PLAN),...plan,notes:plan.notes||{}}; }
   if(living) monthData[m].living=living;
   if(jiyun) monthData[m].jiyun=jiyun;
@@ -353,6 +354,8 @@ async function loadMonthData(m){
   if(parking) monthData[m].parking=parking;
   if(settleExtra) monthData[m].settleExtra=settleExtra;
   else monthData[m].settleExtra={jiExtra:0,woExtra:0};
+  if(comments) monthData[m].comments=comments;
+  else monthData[m].comments={};
 }
 
 function setSyncStatus(msg){document.getElementById('sync-status').textContent=msg;}
@@ -633,7 +636,7 @@ function renderPlan(){
   document.getElementById('plan-content').innerHTML=`
     ${PS('📥 수입',ti,'var(--green)',[PR('income','woonSalary','운혁 급여',true),PR('income','woonBonus','운혁 인센티브',true),PR('income','jiyunSalary','지윤 급여',true),PR('income','jiyunBonus','지윤 인센티브',true)],true)}
     ${PS('🏠 주거비',housingSum,'',[PR('housing','rent','임대료'),PR('housing','management','관리비'),PR('housing','water','정수기'),PR('housing','internet','인터넷')])}
-    ${PS('🚗 교통비',transSum,'',[PR('transport','gas','기름값'),PR('transport','carInstall','차 할부금'),PR('transport','carMaint','차 유지비'),PR('transport','eungpass','이응패스')])}
+    ${PS('🚗 교통비',transSum,'',[PR('transport','gas','기름값'),PR('transport','carInstall','차 할부금'),PR('transport','carMaint','차 유지비'),PR('transport','eungpass','대중교통비')])}
 
     ${PS('🍚 식비 및 생활비',livingSum,'',[PR('living','food','식생활비'),PR('living','daily','생필품')])}
     ${PS('💊 건강 및 보험료',healthSum,'',[PR('health','woonInsure','운혁 보험'),PR('health','jiyunInsure','지윤 보험'),PR('health','woonSoccer','운혁 축구'),PR('health','woonPilates','운혁 필라테스'),PR('health','jiyunPilates','지윤 필라테스')])}
@@ -1313,7 +1316,7 @@ function renderSettle(){
   var traHTML=row('기름값',num(tra.gas),woMap['기름값']||0)
     +row('차 할부금',num(tra.carInstall),woMap['차 할부금']||0)
     +row('차 유지비',num(tra.carMaint),woMap['차 유지비']||0)
-    +row('이응패스',num(tra.eungpass),jiMap['교통']||0);
+    +row('대중교통비',num(tra.eungpass),jiMap['교통']||0);
 
   var livP=num(liv.food)+num(liv.daily);
   var livHTML=row('식비 및 생활비',livP,livTotal);
@@ -1420,7 +1423,33 @@ function renderSettle(){
     +'<div style="font-size:11px;color:var(--sub);margin-top:10px">* 추가 송금금액 = (계획 - 실제) + 지원금 + 기타</div>'
     +'</div>';
 
-  el.innerHTML=html+transferTable;
+  const c=D().comments||{};
+
+  function commentCard(type, label, color){
+    const save1=c[type+'_save']||'';
+    const over1=c[type+'_over']||'';
+    return '<div class="card" style="margin-top:12px;border-left:4px solid '+color+'">'
+      +'<div style="font-weight:700;font-size:14px;margin-bottom:12px;color:'+color+'">'+label+' 코멘트</div>'
+      +'<div style="margin-bottom:10px">'
+      +'<div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:5px">💡 다음에 더 아낄 수 있는 항목</div>'
+      +'<textarea oninput="saveComment(&apos;'+type+'_save&apos;,this.value)" placeholder="ex) 카페 지출을 줄일 수 있었음..." style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;resize:vertical;min-height:70px;outline:none;font-family:inherit;color:var(--text)">'+save1+'</textarea>'
+      +'</div>'
+      +'<div>'
+      +'<div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:5px">🙏 초과할 수 밖에 없었던 항목</div>'
+      +'<textarea oninput="saveComment(&apos;'+type+'_over&apos;,this.value)" placeholder="ex) 병원비가 예상보다 많이 나옴..." style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;resize:vertical;min-height:70px;outline:none;font-family:inherit;color:var(--text)">'+over1+'</textarea>'
+      +'</div>'
+      +'</div>';
+  }
+
+  const commentSection='<div style="margin-top:6px">'
+    +'<div style="font-weight:800;font-size:15px;margin-bottom:12px">💬 이번 달 코멘트</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">'
+    +commentCard('liv','🏠 생활비','var(--accent)')
+    +commentCard('ji','💗 지윤소비','var(--jiyun)')
+    +commentCard('wo','💙 운혁소비','var(--woon)')
+    +'</div></div>';
+
+  el.innerHTML=html+transferTable+commentSection;
 }
 
 function updateSettleExtra(type, val){
@@ -1431,6 +1460,18 @@ function updateSettleExtra(type, val){
   // 결과값만 업데이트 (스크롤 점프 방지)
   updateTransferResult();
 }
+
+
+function saveComment(key, val){
+  if(!D().comments) getMonthData(currentMonth).comments={};
+  D().comments[key]=val;
+  clearTimeout(saveComment._timer);
+  saveComment._timer=setTimeout(()=>{
+    saveData(KEY.comments(currentMonth),D().comments);
+    setSyncStatus('✅ 저장됨');
+  }, 800);
+}
+saveComment._timer=null;
 
 function updateTransferResult(){
   const d=D(), p=d.plan||{};
